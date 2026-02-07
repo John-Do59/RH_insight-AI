@@ -1,0 +1,16 @@
+langchain
+langchain-community
+langgraph
+langchain-ollama
+fastapi
+uvicorn
+streamlit
+pandas
+sqlalchemy
+pydantic
+python-dotenv
+pypdf
+chromadb
+loguru
+streamlit-mic-recorder
+gTTS

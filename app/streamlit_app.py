@@ -14,9 +14,7 @@ from streamlit_mic_recorder import speech_to_text
 from gtts import gTTS
 import streamlit.components.v1 as components
 
-# ═══════════════════════════════════════════════════════════════
 # CONFIG
-# ═══════════════════════════════════════════════════════════════
 st.set_page_config(
     page_title="Amaury Rammanat | CV IA",
     page_icon="🤖",
@@ -24,9 +22,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ═══════════════════════════════════════════════════════════════
-# 📸 CHARGEMENT DE VOTRE PHOTO
-# ═══════════════════════════════════════════════════════════════
+# CHARGEMENT DE VOTRE PHOTO
 def get_base64_image(image_path):
     """Convertit une image locale en base64."""
     try:
@@ -43,14 +39,10 @@ if PHOTO_BASE64:
 else:
     PHOTO_SRC = "https://ui-avatars.com/api/?name=Amaury+Rammanat&size=200&background=667eea&color=fff&bold=true&rounded=true"
 
-# ═══════════════════════════════════════════════════════════════
-# 🎨 CSS COMPLET — RAINBOW BORDER SANS HALO
-# ═══════════════════════════════════════════════════════════════
+# CSS COMPLET — RAINBOW BORDER SANS HALO
 st.markdown(f"""
 <style>
-    /* ══════════════════════════════════════════════════════════
-       🌈 ANIMATIONS
-    ══════════════════════════════════════════════════════════ */
+    /* ANIMATIONS */
     @property --angle {{
         syntax: "<angle>";
         initial-value: 0deg;
@@ -77,9 +69,7 @@ st.markdown(f"""
         100% {{ background-position: 0% 50%; }}
     }}
 
-    /* ══════════════════════════════════════════════════════════
-       🖼️ BACKGROUND
-    ══════════════════════════════════════════════════════════ */
+    /* BACKGROUND */
     .stApp {{
         background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
         background-attachment: fixed;
@@ -98,9 +88,7 @@ st.markdown(f"""
         z-index: 0;
     }}
 
-    /* ══════════════════════════════════════════════════════════
-       👤 AVATAR CHAT — RAINBOW BORDER SANS HALO
-    ══════════════════════════════════════════════════════════ */
+    /* AVATAR CHAT — RAINBOW BORDER SANS HALO */
     .chat-avatar-wrapper {{
         position: relative;
         width: 48px;
@@ -140,9 +128,7 @@ st.markdown(f"""
         background: #1a1a2e;
     }}
 
-    /* ══════════════════════════════════════════════════════════
-       👤 PROFILE HEADER — GRANDE PHOTO RAINBOW BORDER
-    ══════════════════════════════════════════════════════════ */
+    /* PROFILE HEADER — GRANDE PHOTO RAINBOW BORDER */
     .profile-wrapper {{
         position: relative;
         width: 156px;
@@ -182,9 +168,7 @@ st.markdown(f"""
         background: #1a1a2e;
     }}
 
-    /* ══════════════════════════════════════════════════════════
-       👤 SIDEBAR PHOTO — PETITE RAINBOW BORDER
-    ══════════════════════════════════════════════════════════ */
+    /* SIDEBAR PHOTO — PETITE RAINBOW BORDER */
     .profile-wrapper-small {{
         position: relative;
         width: 106px;
@@ -224,9 +208,7 @@ st.markdown(f"""
         background: #1a1a2e;
     }}
 
-    /* ══════════════════════════════════════════════════════════
-       💬 MESSAGES CHAT — RAINBOW BORDER SANS HALO
-    ══════════════════════════════════════════════════════════ */
+    /* MESSAGES CHAT — RAINBOW BORDER SANS HALO */
     .custom-chat-message {{
         display: flex;
         gap: 15px;
@@ -329,9 +311,7 @@ st.markdown(f"""
         font-family: 'Fira Code', monospace;
     }}
 
-    /* ══════════════════════════════════════════════════════════
-       🪟 GLASSMORPHISM
-    ══════════════════════════════════════════════════════════ */
+    /* GLASSMORPHISM */
     .glass-card {{
         background: rgba(255, 255, 255, 0.05);
         backdrop-filter: blur(20px);
@@ -348,9 +328,7 @@ st.markdown(f"""
         box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
     }}
 
-    /* ══════════════════════════════════════════════════════════
-       📝 HEADER — RAINBOW TOP LINE
-    ══════════════════════════════════════════════════════════ */
+    /* HEADER — RAINBOW TOP LINE */
     .main-header {{
         background: rgba(255, 255, 255, 0.03);
         backdrop-filter: blur(30px);
@@ -417,9 +395,7 @@ st.markdown(f"""
         animation: float 3s ease-in-out infinite;
     }}
 
-    /* ══════════════════════════════════════════════════════════
-       📊 INFO GRID
-    ══════════════════════════════════════════════════════════ */
+    /* INFO GRID */
     .info-grid {{
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -490,17 +466,13 @@ st.markdown(f"""
         text-shadow: 0 0 10px rgba(167, 139, 250, 0.5);
     }}
 
-    /* ══════════════════════════════════════════════════════════
-       💬 CACHER LES MESSAGES STREAMLIT PAR DÉFAUT
-    ══════════════════════════════════════════════════════════ */
+    /* CACHER LES MESSAGES STREAMLIT PAR DÉFAUT */
     [data-testid="stChatMessage"] {{
         display: none !important;
     }}
 
-    /* ══════════════════════════════════════════════════════════
-       📝 CHAT INPUT — RAINBOW BORDER ANIMÉE
-       On entoure le conteneur d'un wrapper rainbow
-    ══════════════════════════════════════════════════════════ */
+    /* CHAT INPUT — RAINBOW BORDER ANIMÉE
+       On entoure le conteneur d'un wrapper rainbow */
 
     /* Conteneur bottom (fixed) du chat input */
     [data-testid="stBottom"] > div {{
@@ -556,9 +528,7 @@ st.markdown(f"""
         color: white !important;
     }}
 
-    /* ══════════════════════════════════════════════════════════
-       📱 SIDEBAR
-    ══════════════════════════════════════════════════════════ */
+    /* SIDEBAR */
     [data-testid="stSidebar"] {{
         background: rgba(15, 15, 30, 0.95) !important;
         backdrop-filter: blur(30px) !important;
@@ -579,9 +549,7 @@ st.markdown(f"""
         -webkit-text-fill-color: transparent;
     }}
 
-    /* ══════════════════════════════════════════════════════════
-       🔘 BUTTONS
-    ══════════════════════════════════════════════════════════ */
+    /* BUTTONS */
     .stButton > button {{
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
         color: white !important;
@@ -598,9 +566,7 @@ st.markdown(f"""
         box-shadow: 0 8px 25px rgba(102, 126, 234, 0.45) !important;
     }}
 
-    /* ══════════════════════════════════════════════════════════
-       📋 EXPANDERS
-    ══════════════════════════════════════════════════════════ */
+    /* EXPANDERS */
     .streamlit-expanderHeader {{
         background: rgba(255, 255, 255, 0.03) !important;
         backdrop-filter: blur(10px) !important;
@@ -616,9 +582,7 @@ st.markdown(f"""
         border-top: none !important;
     }}
 
-    /* ══════════════════════════════════════════════════════════
-       🎯 SUGGESTION CARDS
-    ══════════════════════════════════════════════════════════ */
+    /* SUGGESTION CARDS */
     .suggestion-card {{
         background: rgba(255, 255, 255, 0.02);
         backdrop-filter: blur(15px);
@@ -661,9 +625,7 @@ st.markdown(f"""
         padding-left: 12px;
     }}
 
-    /* ══════════════════════════════════════════════════════════
-       🔊 AUDIO
-    ══════════════════════════════════════════════════════════ */
+    /* AUDIO */
     .audio-container {{
         background: rgba(255, 255, 255, 0.03);
         backdrop-filter: blur(15px);
@@ -673,9 +635,7 @@ st.markdown(f"""
         border: 1px solid rgba(255, 255, 255, 0.08);
     }}
 
-    /* ══════════════════════════════════════════════════════════
-       ✨ SKILL TAGS
-    ══════════════════════════════════════════════════════════ */
+    /* SKILL TAGS */
     .skill-tag {{
         display: inline-block;
         background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2));
@@ -693,9 +653,7 @@ st.markdown(f"""
         box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
     }}
 
-    /* ══════════════════════════════════════════════════════════
-       📱 RESPONSIVE
-    ══════════════════════════════════════════════════════════ */
+    /* RESPONSIVE */
     @media (max-width: 768px) {{
         .header-content {{
             flex-direction: column;
@@ -720,9 +678,7 @@ st.markdown(f"""
         }}
     }}
 
-    /* ══════════════════════════════════════════════════════════
-       🎨 MISC
-    ══════════════════════════════════════════════════════════ */
+    /* MISC */
     #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
     header {{visibility: hidden;}}
@@ -758,9 +714,7 @@ st.markdown(f"""
 </style>
 """, unsafe_allow_html=True)
 
-# ═══════════════════════════════════════════════════════════════
-# 🌈 JAVASCRIPT — ANIME --angle POUR TOUS LES NAVIGATEURS
-# ═══════════════════════════════════════════════════════════════
+# JAVASCRIPT — ANIME --angle POUR TOUS LES NAVIGATEURS
 components.html("""
 <script>
 (function() {
@@ -775,9 +729,7 @@ components.html("""
 </script>
 """, height=0)
 
-# ═══════════════════════════════════════════════════════════════
-# 🎨 FONCTION POUR AFFICHER UN MESSAGE AVEC PHOTO RAINBOW
-# ═══════════════════════════════════════════════════════════════
+# FONCTION POUR AFFICHER UN MESSAGE AVEC PHOTO RAINBOW
 def render_chat_message(role: str, content: str, photo_src: str):
     """Affiche un message de chat avec photo rainbow border."""
     message_class = "chat-message-assistant" if role == "assistant" else "chat-message-user"
@@ -797,9 +749,7 @@ def render_chat_message(role: str, content: str, photo_src: str):
     """
     st.markdown(html, unsafe_allow_html=True)
 
-# ═══════════════════════════════════════════════════════════════
-# 📸 HEADER AVEC PHOTO
-# ═══════════════════════════════════════════════════════════════
+# HEADER AVEC PHOTO
 st.markdown(f"""
 <div class="main-header">
     <div class="header-content">
@@ -817,9 +767,7 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# ═══════════════════════════════════════════════════════════════
-# 📊 INFO GRID
-# ═══════════════════════════════════════════════════════════════
+# INFO GRID
 st.markdown("""
 <div class="info-grid">
     <div class="info-item">
@@ -847,9 +795,7 @@ st.markdown("""
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# ═══════════════════════════════════════════════════════════════
-# 💡 SUGGESTIONS
-# ═══════════════════════════════════════════════════════════════
+# SUGGESTIONS
 with st.expander("Exemples de questions à me poser", expanded=True):
     col1, col2, col3 = st.columns(3)
 
@@ -892,9 +838,7 @@ with st.expander("Exemples de questions à me poser", expanded=True):
         </div>
         """, unsafe_allow_html=True)
 
-# ═══════════════════════════════════════════════════════════════
-# 🔊 AUDIO PLAYER
-# ═══════════════════════════════════════════════════════════════
+# AUDIO PLAYER
 def create_audio_player(audio_bytes):
     b64 = base64.b64encode(audio_bytes).decode()
     return f"""
@@ -909,9 +853,7 @@ def create_audio_player(audio_bytes):
     </script>
     """
 
-# ═══════════════════════════════════════════════════════════════
-# 📱 SIDEBAR
-# ═══════════════════════════════════════════════════════════════
+# SIDEBAR
 with st.sidebar:
     st.markdown(f"""
     <div style="display: flex; justify-content: center; padding: 20px 0;">
@@ -960,9 +902,7 @@ with st.sidebar:
         st.session_state.messages = []
         st.rerun()
 
-# ═══════════════════════════════════════════════════════════════
-# 💬 SESSION STATE
-# ═══════════════════════════════════════════════════════════════
+# SESSION STATE
 if "messages" not in st.session_state:
     st.session_state.messages = [{
         "role": "assistant",
@@ -982,9 +922,7 @@ Je suis actuellement en formation de **Développeur IA chez Simplon** et je rech
 if "last_spoken" not in st.session_state:
     st.session_state.last_spoken = None
 
-# ═══════════════════════════════════════════════════════════════
-# 💬 AFFICHAGE DES MESSAGES AVEC PHOTO RAINBOW
-# ═══════════════════════════════════════════════════════════════
+# AFFICHAGE DES MESSAGES AVEC PHOTO RAINBOW
 chat_container = st.container()
 
 with chat_container:
@@ -995,15 +933,12 @@ with chat_container:
             photo_src=PHOTO_SRC
         )
 
-# ═══════════════════════════════════════════════════════════════
-# 💬 INPUT
-# ═══════════════════════════════════════════════════════════════
-chat_input = st.chat_input("💬 Posez votre question sur mon CV...")
+# INPUT
+chat_input = st.chat_input(" Posez votre question sur mon CV...")
 prompt = text_from_voice if text_from_voice else chat_input
 
-# ═══════════════════════════════════════════════════════════════
-# 🔄 TRAITEMENT
-# ═══════════════════════════════════════════════════════════════
+# TRAITEMENT
+
 if prompt:
     if len(st.session_state.messages) == 0 or st.session_state.messages[-1].get("content") != prompt:
 
@@ -1060,9 +995,8 @@ if prompt:
                 logger.error(f"Error: {e}")
                 st.error("❌ Une erreur est survenue.")
 
-# ═══════════════════════════════════════════════════════════════
-# 🎨 FOOTER
-# ═══════════════════════════════════════════════════════════════
+# FOOTER
+
 st.markdown("""
 <div style="text-align: center; margin-top: 50px; padding: 30px; opacity: 0.5;">
     <p style="font-size: 0.85rem;">

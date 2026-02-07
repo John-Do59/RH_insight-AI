@@ -86,4 +86,4 @@ Le script `run.sh` est également disponible pour automatiser le lancement dans 
 
 ## Auteur
 
-Projet développé par Amaury Rammanat dans le cadre de la formation Développeur IA chez Simplon.
+Projet développé par Amaury Rammanat

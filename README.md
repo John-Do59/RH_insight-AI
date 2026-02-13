@@ -1,29 +1,33 @@
 # RH Insight AI - Assistant de Recrutement Intelligent
 
-Plateforme d'analyse et d'interaction avec les données de recrutement utilisant l'intelligence artificielle générative. Ce projet combine le traitement de documents (RAG) et les requêtes structurées (SQL) pour offrir une vue complète sur un profil de candidat.
+![RH Insight AI Cover](app/assets/cover.png)
+
+Plateforme d'analyse et d'interaction avec les données de recrutement utilisant l'intelligence artificielle générative. Ce projet combine le traitement de documents (RAG), les requêtes structurées (SQL) et l'analyse de projets open-source (GitHub) pour offrir une vue complète sur un profil de candidat.
 
 ## Présentation du Projet
 
-RH Insight AI est un assistant conçu pour faciliter le travail des recruteurs et des gestionnaires de talents. Il permet d'interroger à la fois le contenu textuel des CV (expériences, compétences, formations) et les données structurées (statuts, dates, informations de contact) à travers une interface naturelle et fluide.
+RH Insight AI est un assistant conçu pour faciliter le travail des recruteurs et des gestionnaires de talents. Il permet d'interroger à la fois le contenu textuel des CV (expériences, compétences, formations) et les données structurées (statuts, dates, informations de contact) ainsi que l'activité technique sur GitHub à travers une interface naturelle et fluide.
 
 ### Fonctionnalités Clés
 
 - **Analyse de documents (RAG)** : Recherche sémantique et extraction d'informations directement depuis les fichiers PDF des CV.
 - **Requêtes de données (SQL)** : Analyse statistique et recherche de critères précis dans la base de données des candidats.
-- **Orchestration intelligente** : Utilisation de LangGraph pour router les questions vers l'agent le plus pertinent (intent routing).
-- **Interface Premium** : Design inspiré de l'esthétique iOS 26, favorisant une expérience utilisateur sobre et professionnelle.
+- **Agent GitHub** : Récupération et analyse en temps réel des dépôts, langages et descriptions de projets de l'utilisateur.
+- **Orchestration Multi-Agents** : Utilisation de LangGraph pour router les questions vers l'agent le plus pertinent avec un flux hybride séquentiel (SQL -> RAG -> GitHub).
+- **Interface Premium** : Design moderne avec badges de sources (📄 RAG, 🗃️ SQL, 🐙 GitHub) pour une transparence totale.
 - **Interaction vocale** : Support de la synthèse vocale (TTS) et de la reconnaissance vocale (STT).
 
 ## Architecture Technique
 
 Le projet repose sur une architecture multi-agents moderne :
 
-- **Moteur d'exécution** : Python 3.x
+- **Moteur d'exécution** : Python 3.13+
 - **Framework IA** : LangChain et LangGraph
-- **Modèles de langage** : DeepSeek R1 (via Ollama) pour le raisonnement et le traitement local.
-- **Base de données Vectorielle** : FAISS pour l'indexation et la recherche sémantique.
-- **Base de données Relationnelle** : SQLite pour la gestion structurée des candidats et des processus.
-- **Frontend** : Streamlit avec personnalisation CSS avancée.
+- **Modèles de langage** : DeepSeek R1 (via Ollama)
+- **Base de données Vectorielle** : Chroma (Vector Database)
+- **Base de données Relationnelle** : SQLite avec validation SQL security
+- **API Externes** : GitHub REST API avec caching
+- **Frontend** : Streamlit avec personnalisation CSS avancée
 
 ## Guide d'Installation
 

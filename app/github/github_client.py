@@ -34,17 +34,25 @@ class GitHubClient:
         else:
             logger.warning("GitHub Client: No GITHUB_TOKEN provided. Rate limits will be restricted (60/h).")
 
-    def get_public_repos(self, username: str = GITHUB_USERNAME) -> List[Dict[str, Any]]:
+    def get_all_repos(self, username: str = GITHUB_USERNAME) -> List[Dict[str, Any]]:
         """
-        Récupère la liste des repositories publics d'un utilisateur.
+        Récupère la liste des repositories (publics et privés si token présent).
         """
-        cache_key = f"repos_{username}"
+        # Si token présent, on utilise /user/repos pour inclure les privés
+        key_suffix = "auth" if GITHUB_TOKEN else "public"
+        cache_key = f"repos_{username}_{key_suffix}"
+        
         if cache_key in self.cache:
             logger.debug(f"GitHub Client: Cache hit for repos of {username}")
             return self.cache[cache_key]
         
-        url = f"{self.BASE_URL}/users/{username}/repos"
-        params = {"sort": "updated", "per_page": 100, "type": "public"}
+        # Endpoint différent selon l'auth
+        if GITHUB_TOKEN:
+            url = f"{self.BASE_URL}/user/repos"
+            params = {"sort": "updated", "per_page": 100, "visibility": "all"}
+        else:
+            url = f"{self.BASE_URL}/users/{username}/repos"
+            params = {"sort": "updated", "per_page": 100, "type": "public"}
         
         try:
             with httpx.Client() as client:
@@ -63,7 +71,8 @@ class GitHubClient:
                             "stars": r.get("stargazers_count"),
                             "url": r.get("html_url"),
                             "updated_at": r.get("updated_at"),
-                            "topics": r.get("topics", [])
+                            "topics": r.get("topics", []),
+                            "is_private": r.get("private", False)
                         })
                 
                 self.cache[cache_key] = processed_repos

@@ -8,7 +8,7 @@ def clean_spaced_text(text: str) -> str:
     if not text:
         return ""
     
-    # 1. First, detect if the text is likely spaced out.
+    #  First, detect if the text is likely spaced out.
     # We look for sequences of single letters separated by spaces.
     # This regex looks for 3 or more occurrences of: [letter] space
     spaced_pattern = re.compile(r'([A-Za-zÀ-ÿ]\s){3,}')
@@ -16,7 +16,7 @@ def clean_spaced_text(text: str) -> str:
     if not spaced_pattern.search(text):
         return text
 
-    # 2. Logic to reconstruct words:
+    # Logic to reconstruct words:
     # We split by lines to handle formatting better
     lines = text.split('\n')
     cleaned_lines = []

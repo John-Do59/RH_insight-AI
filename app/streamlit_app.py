@@ -4,27 +4,27 @@ import os
 import io
 import base64
 from pathlib import Path
+import textwrap
 
-# Ensure app is in path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.graph.graph import app
 from app.utils.logger import logger
 from streamlit_mic_recorder import speech_to_text
-from gtts import gTTS
+import edge_tts
+import asyncio
 import streamlit.components.v1 as components
 
 # CONFIG
 st.set_page_config(
     page_title="Amaury Rammanat | CV IA",
-    page_icon="🤖",
+    page_icon="",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# CHARGEMENT DE VOTRE PHOTO
+# CHARGEMENT PHOTO
 def get_base64_image(image_path):
-    """Convertit une image locale en base64."""
     try:
         with open(image_path, "rb") as img_file:
             return base64.b64encode(img_file.read()).decode()
@@ -35,21 +35,40 @@ PHOTO_PATH = Path(__file__).parent / "assets" / "photo_amaury.png"
 PHOTO_BASE64 = get_base64_image(PHOTO_PATH)
 
 if PHOTO_BASE64:
-    PHOTO_SRC = f"data:image/png;base64,{PHOTO_BASE64}"
+    ASSISTANT_PHOTO = f"data:image/png;base64,{PHOTO_BASE64}"
 else:
-    PHOTO_SRC = "https://ui-avatars.com/api/?name=Amaury+Rammanat&size=200&background=667eea&color=fff&bold=true&rounded=true"
+    ASSISTANT_PHOTO = (
+        "https://ui-avatars.com/api/?name=Amaury+Rammanat"
+        "&size=200&background=667eea&color=fff&bold=true&rounded=true"
+    )
 
-# CSS COMPLET — RAINBOW BORDER SANS HALO
+# ── Avatar générique pour l'utilisateur (pas ta photo) ──
+USER_AVATAR = (
+    "https://ui-avatars.com/api/?name=You"
+    "&size=200&background=3a3a5c&color=fff&bold=true&rounded=true"
+)
+
+# COULEURS PURPLE
+PURPLE_GRADIENT = """
+    #7c3aed, #8b5cf6, #a78bfa, #7c3aed,
+    #6d28d9, #8b5cf6, #a78bfa, #7c3aed
+"""
+PURPLE_GRADIENT_LIGHT = """
+    #667eea, #764ba2, #a78bfa, #c4b5fd,
+    #667eea, #764ba2, #a78bfa
+"""
+
+# CSS COMPLET — PURPLE THEME
 st.markdown(f"""
 <style>
-    /* ANIMATIONS */
+    /*  ANIMATIONS  */
     @property --angle {{
         syntax: "<angle>";
         initial-value: 0deg;
         inherits: false;
     }}
 
-    @keyframes apple-spin {{
+    @keyframes spin-purple {{
         to {{ --angle: 360deg; }}
     }}
 
@@ -58,18 +77,24 @@ st.markdown(f"""
         50% {{ transform: translateY(-8px); }}
     }}
 
-    @keyframes fadeIn {{
-        from {{ opacity: 0; transform: translateY(10px); }}
+    @keyframes fadeInUp {{
+        from {{ opacity: 0; transform: translateY(15px); }}
         to {{ opacity: 1; transform: translateY(0); }}
     }}
 
-    @keyframes border-dance {{
+    @keyframes typing-dots {{
+        0%, 20% {{ opacity: 0.3; }}
+        50% {{ opacity: 1; }}
+        80%, 100% {{ opacity: 0.3; }}
+    }}
+
+    @keyframes border-flow {{
         0% {{ background-position: 0% 50%; }}
         50% {{ background-position: 100% 50%; }}
         100% {{ background-position: 0% 50%; }}
     }}
 
-    /* BACKGROUND */
+    /*  BACKGROUND  */
     .stApp {{
         background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
         background-attachment: fixed;
@@ -81,14 +106,14 @@ st.markdown(f"""
         top: 0; left: 0;
         width: 100%; height: 100%;
         background:
-            radial-gradient(circle at 20% 20%, rgba(102, 126, 234, 0.12) 0%, transparent 40%),
-            radial-gradient(circle at 80% 80%, rgba(118, 75, 162, 0.12) 0%, transparent 40%),
-            radial-gradient(circle at 50% 50%, rgba(240, 147, 251, 0.06) 0%, transparent 50%);
+            radial-gradient(circle at 20% 20%, rgba(124, 58, 237, 0.10) 0%, transparent 40%),
+            radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.10) 0%, transparent 40%),
+            radial-gradient(circle at 50% 50%, rgba(167, 139, 250, 0.05) 0%, transparent 50%);
         pointer-events: none;
         z-index: 0;
     }}
 
-    /* AVATAR CHAT — RAINBOW BORDER SANS HALO */
+    /*  AVATAR CHAT  */
     .chat-avatar-wrapper {{
         position: relative;
         width: 48px;
@@ -99,22 +124,35 @@ st.markdown(f"""
         justify-content: center;
     }}
 
-    .chat-avatar-wrapper::before {{
+    /* Animated border ONLY on assistant avatar */
+    .chat-message-assistant .chat-avatar-wrapper::before {{
         content: '';
         position: absolute;
         inset: -2px;
         border-radius: 50%;
         background: conic-gradient(
             from var(--angle, 0deg),
-            #f06292, #ba68c8, #7e57c2, #5c6bc0,
-            #42a5f5, #26c6da, #66bb6a, #ffee58,
-            #ffa726, #ef5350, #f06292
+            {PURPLE_GRADIENT}
         );
         -webkit-mask:
             radial-gradient(farthest-side, transparent calc(100% - 2px), #fff calc(100% - 2px));
         mask:
             radial-gradient(farthest-side, transparent calc(100% - 2px), #fff calc(100% - 2px));
-        animation: apple-spin 4s linear infinite;
+        animation: spin-purple 4s linear infinite;
+        z-index: 1;
+    }}
+
+    /* User avatar — simple subtle border, no animation */
+    .chat-message-user .chat-avatar-wrapper::before {{
+        content: '';
+        position: absolute;
+        inset: -2px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.15);
+        -webkit-mask:
+            radial-gradient(farthest-side, transparent calc(100% - 2px), #fff calc(100% - 2px));
+        mask:
+            radial-gradient(farthest-side, transparent calc(100% - 2px), #fff calc(100% - 2px));
         z-index: 1;
     }}
 
@@ -128,7 +166,7 @@ st.markdown(f"""
         background: #1a1a2e;
     }}
 
-    /* PROFILE HEADER — GRANDE PHOTO RAINBOW BORDER */
+    /*  PROFILE HEADER  */
     .profile-wrapper {{
         position: relative;
         width: 156px;
@@ -146,15 +184,13 @@ st.markdown(f"""
         border-radius: 50%;
         background: conic-gradient(
             from var(--angle, 0deg),
-            #f06292, #ba68c8, #7e57c2, #5c6bc0,
-            #42a5f5, #26c6da, #66bb6a, #ffee58,
-            #ffa726, #ef5350, #f06292
+            {PURPLE_GRADIENT}
         );
         -webkit-mask:
             radial-gradient(farthest-side, transparent calc(100% - 4px), #fff calc(100% - 4px));
         mask:
             radial-gradient(farthest-side, transparent calc(100% - 4px), #fff calc(100% - 4px));
-        animation: apple-spin 5s linear infinite;
+        animation: spin-purple 5s linear infinite;
         z-index: 1;
     }}
 
@@ -168,7 +204,7 @@ st.markdown(f"""
         background: #1a1a2e;
     }}
 
-    /* SIDEBAR PHOTO — PETITE RAINBOW BORDER */
+    /*  SIDEBAR PHOTO — SMALL PURPLE BORDER  */
     .profile-wrapper-small {{
         position: relative;
         width: 106px;
@@ -186,15 +222,13 @@ st.markdown(f"""
         border-radius: 50%;
         background: conic-gradient(
             from var(--angle, 0deg),
-            #f06292, #ba68c8, #7e57c2, #5c6bc0,
-            #42a5f5, #26c6da, #66bb6a, #ffee58,
-            #ffa726, #ef5350, #f06292
+            {PURPLE_GRADIENT}
         );
         -webkit-mask:
             radial-gradient(farthest-side, transparent calc(100% - 3px), #fff calc(100% - 3px));
         mask:
             radial-gradient(farthest-side, transparent calc(100% - 3px), #fff calc(100% - 3px));
-        animation: apple-spin 5s linear infinite;
+        animation: spin-purple 5s linear infinite;
         z-index: 1;
     }}
 
@@ -208,7 +242,7 @@ st.markdown(f"""
         background: #1a1a2e;
     }}
 
-    /* MESSAGES CHAT — RAINBOW BORDER SANS HALO */
+    /*  MESSAGES CHAT  */
     .custom-chat-message {{
         display: flex;
         gap: 15px;
@@ -217,15 +251,18 @@ st.markdown(f"""
         border-radius: 22px;
         backdrop-filter: blur(15px);
         -webkit-backdrop-filter: blur(15px);
-        animation: fadeIn 0.4s ease;
         position: relative;
     }}
 
-    /* ── Assistant message ── */
+    /* Animation ONLY for new messages */
+    .custom-chat-message.is-new {{
+        animation: fadeInUp 0.5s ease-out;
+    }}
+
+    /*  Assistant message  */
     .chat-message-assistant {{
         background: rgba(255, 255, 255, 0.04);
         border: none;
-        position: relative;
         z-index: 1;
     }}
 
@@ -237,44 +274,22 @@ st.markdown(f"""
         padding: 2px;
         background: conic-gradient(
             from var(--angle, 0deg),
-            #f06292, #ba68c8, #7e57c2, #5c6bc0,
-            #42a5f5, #26c6da, #66bb6a, #ffee58,
-            #ffa726, #ef5350, #f06292
+            {PURPLE_GRADIENT}
         );
         -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
         -webkit-mask-composite: xor;
         mask-composite: exclude;
-        animation: apple-spin 6s linear infinite;
+        animation: spin-purple 6s linear infinite;
         z-index: -1;
         pointer-events: none;
     }}
 
     /* ── User message ── */
     .chat-message-user {{
-        background: linear-gradient(135deg, rgba(102, 126, 234, 0.12), rgba(118, 75, 162, 0.12));
-        border: none;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.10), rgba(118, 75, 162, 0.10));
+        border: 1px solid rgba(139, 92, 246, 0.15);
         flex-direction: row-reverse;
-        position: relative;
         z-index: 1;
-    }}
-
-    .chat-message-user::before {{
-        content: '';
-        position: absolute;
-        inset: 0;
-        border-radius: 22px;
-        padding: 2px;
-        background: conic-gradient(
-            from var(--angle, 0deg),
-            #667eea, #764ba2, #f093fb, #c471f5,
-            #667eea, #764ba2, #f093fb
-        );
-        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-        -webkit-mask-composite: xor;
-        mask-composite: exclude;
-        animation: apple-spin 6s linear infinite;
-        z-index: -1;
-        pointer-events: none;
     }}
 
     .chat-message-user .chat-content {{
@@ -291,6 +306,10 @@ st.markdown(f"""
         margin: 0 0 10px 0;
     }}
 
+    .chat-content p:last-child {{
+        margin-bottom: 0;
+    }}
+
     .chat-content ul, .chat-content ol {{
         margin: 10px 0;
         padding-left: 20px;
@@ -305,13 +324,13 @@ st.markdown(f"""
     }}
 
     .chat-content code {{
-        background: rgba(102, 126, 234, 0.2);
+        background: rgba(124, 58, 237, 0.2);
         padding: 2px 6px;
         border-radius: 4px;
         font-family: 'Fira Code', monospace;
     }}
 
-    /* GLASSMORPHISM */
+    /*  GLASSMORPHISM  */
     .glass-card {{
         background: rgba(255, 255, 255, 0.05);
         backdrop-filter: blur(20px);
@@ -324,11 +343,11 @@ st.markdown(f"""
 
     .glass-card:hover {{
         transform: translateY(-5px);
-        border-color: rgba(255, 255, 255, 0.2);
+        border-color: rgba(139, 92, 246, 0.3);
         box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
     }}
 
-    /* HEADER — RAINBOW TOP LINE */
+    /*  HEADER  */
     .main-header {{
         background: rgba(255, 255, 255, 0.03);
         backdrop-filter: blur(30px);
@@ -348,12 +367,11 @@ st.markdown(f"""
         height: 3px;
         background: linear-gradient(
             90deg,
-            #f06292, #ba68c8, #7e57c2, #5c6bc0,
-            #42a5f5, #26c6da, #66bb6a, #ffee58,
-            #ffa726, #ef5350, #f06292
+            #6d28d9, #7c3aed, #8b5cf6, #a78bfa,
+            #c4b5fd, #a78bfa, #8b5cf6, #7c3aed, #6d28d9
         );
         background-size: 300% 100%;
-        animation: border-dance 5s ease infinite;
+        animation: border-flow 5s ease infinite;
     }}
 
     .header-content {{
@@ -384,18 +402,18 @@ st.markdown(f"""
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        background: linear-gradient(135deg, #00c853, #00e676);
+        background: linear-gradient(135deg, #7c3aed, #8b5cf6);
         color: white;
         padding: 10px 22px;
         border-radius: 50px;
         font-size: 0.95rem;
         font-weight: 600;
         margin-top: 15px;
-        box-shadow: 0 4px 20px rgba(0, 200, 83, 0.35);
+        box-shadow: 0 4px 20px rgba(124, 58, 237, 0.35);
         animation: float 3s ease-in-out infinite;
     }}
 
-    /* INFO GRID */
+    /*  INFO GRID  */
     .info-grid {{
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -420,7 +438,7 @@ st.markdown(f"""
         position: absolute;
         top: 0; left: 0;
         width: 100%; height: 3px;
-        background: linear-gradient(90deg, #667eea, #764ba2, #f093fb);
+        background: linear-gradient(90deg, #7c3aed, #8b5cf6, #a78bfa);
         transform: scaleX(0);
         transition: transform 0.3s ease;
     }}
@@ -431,7 +449,7 @@ st.markdown(f"""
 
     .info-item:hover {{
         transform: translateY(-8px);
-        border-color: rgba(102, 126, 234, 0.3);
+        border-color: rgba(124, 58, 237, 0.3);
         box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
     }}
 
@@ -466,54 +484,35 @@ st.markdown(f"""
         text-shadow: 0 0 10px rgba(167, 139, 250, 0.5);
     }}
 
-    /* CACHER LES MESSAGES STREAMLIT PAR DÉFAUT */
+    /* ═══ HIDE DEFAULT STREAMLIT CHAT ═══ */
     [data-testid="stChatMessage"] {{
         display: none !important;
     }}
 
-    /* CHAT INPUT — RAINBOW BORDER ANIMÉE
-       On entoure le conteneur d'un wrapper rainbow */
-
-    /* Conteneur bottom (fixed) du chat input */
+    /* ═══ CHAT INPUT — PURPLE BORDER ═══ */
     [data-testid="stBottom"] > div {{
         background: transparent !important;
     }}
 
-    /* Le wrapper principal du chat input */
     .stChatInput {{
         position: relative !important;
         z-index: 1 !important;
-    }}
-
-    .stChatInput > div {{
-        background: rgba(15, 15, 30, 0.9) !important;
-        backdrop-filter: blur(20px) !important;
-        -webkit-backdrop-filter: blur(20px) !important;
-        border: none !important;
-        border-radius: 25px !important;
-        transition: all 0.3s ease !important;
-        position: relative !important;
-        z-index: 2 !important;
-    }}
-
-    /* Rainbow border via un wrapper qu'on simule avec box-shadow + outline trick */
-    /* Technique : on utilise un outline + gradient via pseudo-element sur le parent */
-
-    .stChatInput {{
-        position: relative !important;
         padding: 2px !important;
         border-radius: 27px !important;
         background: conic-gradient(
             from var(--angle, 0deg),
-            #f06292, #ba68c8, #7e57c2, #5c6bc0,
-            #42a5f5, #26c6da, #66bb6a, #ffee58,
-            #ffa726, #ef5350, #f06292
+            {PURPLE_GRADIENT}
         ) !important;
-        animation: apple-spin 4s linear infinite !important;
+        animation: spin-purple 4s linear infinite !important;
     }}
 
     .stChatInput > div {{
+        background: rgba(15, 15, 30, 0.95) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        border: none !important;
         border-radius: 25px !important;
+        z-index: 2 !important;
     }}
 
     .stChatInput input {{
@@ -528,7 +527,7 @@ st.markdown(f"""
         color: white !important;
     }}
 
-    /* SIDEBAR */
+    /*  SIDEBAR  */
     [data-testid="stSidebar"] {{
         background: rgba(15, 15, 30, 0.95) !important;
         backdrop-filter: blur(30px) !important;
@@ -544,29 +543,30 @@ st.markdown(f"""
         margin: 20px 0;
         font-size: 1.2rem;
         font-weight: 600;
-        background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+        background: linear-gradient(135deg, #7c3aed, #8b5cf6, #a78bfa);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
     }}
 
-    /* BUTTONS */
+    /*  BUTTONS  */
     .stButton > button {{
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%) !important;
         color: white !important;
         border: none !important;
         border-radius: 15px !important;
         padding: 12px 25px !important;
         font-weight: 600 !important;
         transition: all 0.3s ease !important;
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.35) !important;
+        box-shadow: 0 4px 15px rgba(124, 58, 237, 0.35) !important;
     }}
 
     .stButton > button:hover {{
         transform: translateY(-3px) !important;
-        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.45) !important;
+        box-shadow: 0 8px 25px rgba(124, 58, 237, 0.45) !important;
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%) !important;
     }}
 
-    /* EXPANDERS */
+    /*  EXPANDERS  */
     .streamlit-expanderHeader {{
         background: rgba(255, 255, 255, 0.03) !important;
         backdrop-filter: blur(10px) !important;
@@ -582,7 +582,7 @@ st.markdown(f"""
         border-top: none !important;
     }}
 
-    /* SUGGESTION CARDS */
+    /*  SUGGESTION CARDS  */
     .suggestion-card {{
         background: rgba(255, 255, 255, 0.02);
         backdrop-filter: blur(15px);
@@ -595,7 +595,7 @@ st.markdown(f"""
 
     .suggestion-card:hover {{
         background: rgba(255, 255, 255, 0.05);
-        border-color: rgba(102, 126, 234, 0.3);
+        border-color: rgba(124, 58, 237, 0.3);
         transform: translateY(-5px);
     }}
 
@@ -621,39 +621,39 @@ st.markdown(f"""
 
     .suggestion-card li:hover {{
         color: #c4b5fd;
-        background: rgba(102, 126, 234, 0.1);
+        background: rgba(124, 58, 237, 0.1);
         padding-left: 12px;
     }}
 
-    /* AUDIO */
+    /* ═══ AUDIO ═══ */
     .audio-container {{
         background: rgba(255, 255, 255, 0.03);
         backdrop-filter: blur(15px);
         border-radius: 15px;
         padding: 12px;
         margin-top: 10px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(124, 58, 237, 0.15);
     }}
 
-    /* SKILL TAGS */
+    /*  SKILL TAGS  */
     .skill-tag {{
         display: inline-block;
-        background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2));
+        background: linear-gradient(135deg, rgba(124, 58, 237, 0.2), rgba(139, 92, 246, 0.2));
         padding: 6px 14px;
         border-radius: 50px;
         margin: 4px;
         font-size: 0.85rem;
         color: white;
-        border: 1px solid rgba(102, 126, 234, 0.2);
+        border: 1px solid rgba(124, 58, 237, 0.25);
         transition: all 0.3s ease;
     }}
 
     .skill-tag:hover {{
         transform: scale(1.05);
-        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        box-shadow: 0 5px 15px rgba(124, 58, 237, 0.3);
     }}
 
-    /* RESPONSIVE */
+    /* ═══ RESPONSIVE ═══ */
     @media (max-width: 768px) {{
         .header-content {{
             flex-direction: column;
@@ -678,7 +678,7 @@ st.markdown(f"""
         }}
     }}
 
-    /* MISC */
+    /*  MISC  */
     #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
     header {{visibility: hidden;}}
@@ -692,7 +692,7 @@ st.markdown(f"""
     }}
 
     ::-webkit-scrollbar-thumb {{
-        background: linear-gradient(135deg, #667eea, #764ba2);
+        background: linear-gradient(135deg, #7c3aed, #8b5cf6);
         border-radius: 10px;
     }}
 
@@ -708,12 +708,12 @@ st.markdown(f"""
         border-color: rgba(255, 255, 255, 0.1) !important;
     }}
 
-    .stSpinner > div {
-        border-top-color: #667eea !important;
-    }
+    .stSpinner > div {{
+        border-top-color: #7c3aed !important;
+    }}
 
-    /* SOURCE BADGES */
-    .source-badge {
+    /* ═══ SOURCE BADGES ═══ */
+    .source-badge {{
         display: inline-flex;
         align-items: center;
         gap: 4px;
@@ -725,22 +725,47 @@ st.markdown(f"""
         margin-top: 8px;
         text-transform: uppercase;
         letter-spacing: 0.5px;
-    }
-    .badge-rag { background: rgba(102, 126, 234, 0.2); border: 1px solid rgba(102, 126, 234, 0.4); color: #a5b4fc; }
-    .badge-sql { background: rgba(118, 75, 162, 0.2); border: 1px solid rgba(118, 75, 162, 0.4); color: #c4b5fd; }
-    .badge-github { background: rgba(240, 147, 251, 0.2); border: 1px solid rgba(240, 147, 251, 0.4); color: #fbcfe8; }
-    .badge-jobs { background: rgba(0, 230, 118, 0.2); border: 1px solid rgba(0, 230, 118, 0.4); color: #69f0ae; }
+    }}
+    .badge-rag {{
+        background: rgba(124, 58, 237, 0.2);
+        border: 1px solid rgba(124, 58, 237, 0.4);
+        color: #c4b5fd;
+    }}
+    .badge-sql {{
+        background: rgba(139, 92, 246, 0.2);
+        border: 1px solid rgba(139, 92, 246, 0.4);
+        color: #ddd6fe;
+    }}
+    .badge-github {{
+        background: rgba(167, 139, 250, 0.2);
+        border: 1px solid rgba(167, 139, 250, 0.4);
+        color: #ede9fe;
+    }}
+    .badge-jobs {{
+        background: rgba(109, 40, 217, 0.2);
+        border: 1px solid rgba(109, 40, 217, 0.4);
+        color: #a78bfa;
+    }}
 </style>
 """, unsafe_allow_html=True)
 
-# JAVASCRIPT — ANIME --angle POUR TOUS LES NAVIGATEURS
+# JAVASCRIPT — ANIME --angle
+# NOTE: Ce script tourne dans une iframe, donc on utilise
+# un CSS @keyframes comme fallback principal.
+# Le JS ci-dessous tente de patcher le parent document.
 components.html("""
 <script>
 (function() {
     let angle = 0;
     function updateAngle() {
         angle = (angle + 0.8) % 360;
-        document.documentElement.style.setProperty('--angle', angle + 'deg');
+        try {
+            // Try to set on parent document (Streamlit main frame)
+            window.parent.document.documentElement.style.setProperty('--angle', angle + 'deg');
+        } catch(e) {
+            // Fallback: set on own document
+            document.documentElement.style.setProperty('--angle', angle + 'deg');
+        }
         requestAnimationFrame(updateAngle);
     }
     updateAngle();
@@ -748,124 +773,150 @@ components.html("""
 </script>
 """, height=0)
 
-# FONCTION POUR AFFICHER UN MESSAGE AVEC PHOTO RAINBOW
-def render_chat_message(role: str, content: str, photo_src: str, sources: list = None):
-    """Affiche un message de chat avec photo rainbow border et badges sources."""
-    message_class = "chat-message-assistant" if role == "assistant" else "chat-message-user"
 
-    content_html = content.replace("\n", "<br>")
-    content_html = content_html.replace("**", "<strong>").replace("**", "</strong>")
+# FONCTION RENDU MESSAGE
+def render_chat_message(
+    role: str,
+    content: str,
+    sources: list = None,
+    is_new: bool = False
+):
 
-    # Badges sources
+    message_class = (
+        "chat-message-assistant" if role == "assistant"
+        else "chat-message-user"
+    )
+    new_class = "is-new" if is_new else ""
+
+    # Choisir l'avatar selon le rôle
+    avatar_src = ASSISTANT_PHOTO if role == "assistant" else USER_AVATAR
+
+    # Conversion markdown basique → HTML
+    import re
+    content_html = content
+
+    # Bold: **text** → <strong>text</strong>
+    content_html = re.sub(
+        r'\*\*(.+?)\*\*',
+        r'<strong>\1</strong>',
+        content_html
+    )
+
+    # Line breaks
+    content_html = content_html.replace("\n", "<br>")
+
+    # Source badges
     badges_html = ""
     if role == "assistant" and sources:
         badges_html = '<div style="margin-top: 10px;">'
-        if "rag" in sources: badges_html += '<span class="source-badge badge-rag">📄 RAG (CV)</span>'
-        if "sql" in sources: badges_html += '<span class="source-badge badge-sql">🗃️ SQL (Faits)</span>'
-        if "github" in sources: badges_html += '<span class="source-badge badge-github">🐙 GitHub (Code)</span>'
+        badge_map = {
+            "rag": (' RAG (CV)', 'badge-rag'),
+            "sql": (' SQL (Faits)', 'badge-sql'),
+            "github": (' GitHub (Code)', 'badge-github'),
+            "jobs": (' Emplois', 'badge-jobs'),
+        }
+        for src in sources:
+            if src in badge_map:
+                label, cls = badge_map[src]
+                badges_html += f'<span class="source-badge {cls}">{label}</span>'
         badges_html += '</div>'
 
-    html = f"""
-    <div class="custom-chat-message {message_class}">
-        <div class="chat-avatar-wrapper">
-            <img src="{photo_src}" class="chat-avatar" alt="Avatar">
-        </div>
-        <div class="chat-content">
-            {content_html}
-            {badges_html}
-        </div>
-    </div>
-    """
+    # Rendu HTML final sur une seule ligne pour éviter que Streamlit n'interprète les indentations comme du Markdown (code blocks)
+    html = (
+        f'<div class="custom-chat-message {message_class} {new_class}">'
+        f'<div class="chat-avatar-wrapper"><img src="{avatar_src}" class="chat-avatar" alt="{role}"></div>'
+        f'<div class="chat-content">{content_html}{badges_html}</div>'
+        '</div>'
+    )
     st.markdown(html, unsafe_allow_html=True)
 
-# HEADER AVEC PHOTO
-st.markdown(f"""
-<div class="main-header">
-    <div class="header-content">
-        <div class="profile-wrapper">
-            <img src="{PHOTO_SRC}" class="profile-photo" alt="Amaury Rammanat">
-        </div>
-        <div class="header-text">
-            <h1>Amaury Rammanat</h1>
-            <p>Développeur IA en formation | Passionné par le Machine Learning & l'IA Générative</p>
-            <div class="status-badge">
-                Recherche Alternance Sept. 2026
+
+# HEADER
+st.markdown(textwrap.dedent(f"""
+    <div class="main-header">
+        <div class="header-content">
+            <div class="profile-wrapper">
+                <img src="{ASSISTANT_PHOTO}" class="profile-photo" alt="Amaury Rammanat">
+            </div>
+            <div class="header-text">
+                <h1>Amaury Rammanat</h1>
+                <p>Développeur IA en formation | Passionné par le Machine Learning & l'IA Générative</p>
+                <div class="status-badge">
+                     Recherche Alternance Sept. 2026
+                </div>
             </div>
         </div>
     </div>
-</div>
-""", unsafe_allow_html=True)
+"""), unsafe_allow_html=True)
 
 # INFO GRID
-st.markdown("""
-<div class="info-grid">
-    <div class="info-item">
-        <span class="info-icon">Localisation</span>
-        <div class="info-label">Ville</div>
-        <div class="info-value">Lille, France</div>
-    </div>
-    <div class="info-item">
-        <span class="info-icon">Email</span>
-        <div class="info-label">Contact</div>
-        <div class="info-value">
-            <a href="mailto:rammanatamaury@gmail.com">rammanatamaury@gmail.com</a>
+st.markdown(textwrap.dedent("""
+    <div class="info-grid">
+        <div class="info-item">
+            <span class="info-icon"></span>
+            <div class="info-label">Localisation</div>
+            <div class="info-value">Lille, France</div>
+        </div>
+        <div class="info-item">
+            <span class="info-icon"></span>
+            <div class="info-label">Contact</div>
+            <div class="info-value">
+                <a href="mailto:rammanatamaury@gmail.com">rammanatamaury@gmail.com</a>
+            </div>
+        </div>
+        <div class="info-item">
+            <span class="info-icon"></span>
+            <div class="info-label">Profils</div>
+            <div class="info-value">
+                <a href="https://linkedin.com/in/amaury-r-1bb0b032b/" target="_blank">LinkedIn</a> •
+                <a href="https://github.com/John-Do59" target="_blank">GitHub</a>
+            </div>
         </div>
     </div>
-    <div class="info-item">
-        <span class="info-icon">Réseaux</span>
-        <div class="info-label">Profils</div>
-        <div class="info-value">
-            <a href="https://linkedin.com/in/amaury-r-1bb0b032b/" target="_blank">LinkedIn</a> •
-            <a href="https://github.com/John-Do59" target="_blank">GitHub</a>
-        </div>
-    </div>
-</div>
-""", unsafe_allow_html=True)
+"""), unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
 
 # SUGGESTIONS
-with st.expander("Exemples de questions à me poser", expanded=True):
+with st.expander(" Exemples de questions à me poser", expanded=True):
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        st.markdown("""
-        <div class="suggestion-card">
-            <h4>Présentation</h4>
-            <ul>
-                <li>Présente-toi</li>
-                <li>Qui es-tu ?</li>
-                <li>Quel poste recherches-tu ?</li>
-                <li>Pourquoi l'IA ?</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown(textwrap.dedent("""
+            <div class="suggestion-card">
+                <h4> Présentation</h4>
+                <ul>
+                    <li>Présente-toi</li>
+                    <li>Qui es-tu ?</li>
+                    <li>Quel poste recherches-tu ?</li>
+                    <li>Pourquoi l'IA ?</li>
+                </ul>
+            </div>
+        """), unsafe_allow_html=True)
 
     with col2:
-        st.markdown("""
-        <div class="suggestion-card">
-            <h4>Compétences</h4>
-            <ul>
-                <li>Quelles sont tes compétences ?</li>
-                <li>Tu connais Python ?</li>
-                <li>Ton niveau en ML ?</li>
-                <li>Quels outils IA ?</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown(textwrap.dedent("""
+            <div class="suggestion-card">
+                <h4> Compétences</h4>
+                <ul>
+                    <li>Quelles sont tes compétences ?</li>
+                    <li>Tu connais Python ?</li>
+                    <li>Quels outils IA ?</li>
+                </ul>
+            </div>
+        """), unsafe_allow_html=True)
 
     with col3:
-        st.markdown("""
-        <div class="suggestion-card">
-            <h4>Projets & Code</h4>
-            <ul>
-                <li>Quels sont tes projets GitHub ?</li>
-                <li>Montre-moi ton code</li>
-                <li>Tes recents repos ?</li>
-                <li>Tes technos favorites ?</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown(textwrap.dedent("""
+            <div class="suggestion-card">
+                <h4> Projets & Code</h4>
+                <ul>
+                    <li>Quels sont tes projets GitHub ?</li>
+                    <li>Tes technos favorites ?</li>
+                </ul>
+            </div>
+        """), unsafe_allow_html=True)
+
 
 # AUDIO PLAYER
 def create_audio_player(audio_bytes):
@@ -882,99 +933,131 @@ def create_audio_player(audio_bytes):
     </script>
     """
 
+
 # SIDEBAR
 with st.sidebar:
-    st.markdown(f"""
-    <div style="display: flex; justify-content: center; padding: 20px 0;">
-        <div class="profile-wrapper-small">
-            <img src="{PHOTO_SRC}" class="profile-photo-small" alt="AR">
+    st.markdown(textwrap.dedent(f"""
+        <div style="display: flex; justify-content: center; padding: 20px 0;">
+            <div class="profile-wrapper-small">
+                <img src="{ASSISTANT_PHOTO}" class="profile-photo-small" alt="AR">
+            </div>
         </div>
-    </div>
-    <div class="sidebar-title">Interaction Vocale</div>
-    """, unsafe_allow_html=True)
+        <div class="sidebar-title"> Interaction Vocale</div>
+    """), unsafe_allow_html=True)
 
     text_from_voice = speech_to_text(
         language="fr",
-        start_prompt="Parler",
-        stop_prompt="Stop",
+        start_prompt=" Parler",
+        stop_prompt=" Stop",
         just_once=True,
         key="stt"
     )
 
     if text_from_voice:
-        st.success(f"Capturé : {text_from_voice}")
+        st.success(f" Capturé : {text_from_voice}")
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    st.markdown("### Options")
-    tts_enabled = st.toggle("Réponse vocale", value=True)
-    safari_mode = st.checkbox("Mode Safari", value=True)
+    st.markdown("###  Options")
+    tts_enabled = st.toggle(" Réponse vocale", value=True)
+    safari_mode = st.checkbox(" Mode Safari", value=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
     st.divider()
 
-    st.markdown("""
-    <div style="text-align: center; margin-bottom: 10px;">
-        <span style="color: rgba(255,255,255,0.5); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">Technologies</span>
-    </div>
-    <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 5px;">
-        <span class="skill-tag">Python</span>
-        <span class="skill-tag">LangChain</span>
-        <span class="skill-tag">RAG</span>
-        <span class="skill-tag">SQL</span>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown(textwrap.dedent("""
+        <div style="text-align: center; margin-bottom: 10px;">
+            <span style="color: rgba(255,255,255,0.5); font-size: 0.75rem;
+                  text-transform: uppercase; letter-spacing: 1px;">
+                Technologies
+            </span>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 5px;">
+            <span class="skill-tag">Python</span>
+            <span class="skill-tag">LangChain</span>
+            <span class="skill-tag">RAG</span>
+            <span class="skill-tag">SQL</span>
+        </div>
+    """), unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
     if st.button("Effacer la conversation", use_container_width=True):
         st.session_state.messages = []
+        st.session_state.last_spoken = None
         st.rerun()
+
 
 # SESSION STATE
 if "messages" not in st.session_state:
     st.session_state.messages = [{
         "role": "assistant",
-        "content": """Bonjour ! Je suis l'assistant IA d'**Amaury Rammanat**.
-
-Je suis actuellement en formation de **Développeur IA chez Simplon** et je recherche une **alternance d'un an à partir de septembre 2026**.
-
-**Je peux vous parler de :**
-- Mes **compétences** (Python, SQL, Machine Learning, LLM, RAG...)
-- Mon **parcours** et mes **formations** (Simplon, Apple Foundation, ULCO)
-- Mes **projets** (Sport-Unity IA, Chatbots, Automatisations N8N)
-- Ma **recherche d'alternance** (Data Analyst, Data Scientist, Dev IA)
-
-**Que souhaitez-vous savoir sur mon profil ?**"""
+        "content": (
+            "Bonjour ! Je suis l'assistant IA d'**Amaury Rammanat**.\n\n"
+            "Je suis actuellement en formation de **Développeur IA chez Simplon** "
+            "et je recherche une **alternance d'un an à partir de septembre 2026**.\n\n"
+            "**Je peux vous parler de :**\n"
+            "- Mes **compétences** (Python, SQL, Machine Learning, LLM, RAG...)\n"
+            "- Mon **parcours** et mes **formations** (Simplon, Apple Foundation, ULCO)\n"
+            "- Mes **projets** (Sport-Unity IA, Chatbots, Automatisations N8N)\n"
+            "- Ma **recherche d'alternance** (Data Analyst, Data Scientist, Dev IA)\n\n"
+            "**Que souhaitez-vous savoir sur mon profil ?**"
+        ),
+        "sources": []
     }]
 
 if "last_spoken" not in st.session_state:
     st.session_state.last_spoken = None
 
-# AFFICHAGE DES MESSAGES AVEC PHOTO RAINBOW
+# Track le nombre de messages pour savoir lesquels sont "nouveaux"
+if "rendered_count" not in st.session_state:
+    st.session_state.rendered_count = 0
+
+
+# AFFICHAGE DES MESSAGES
 chat_container = st.container()
 
 with chat_container:
-    for msg in st.session_state.messages:
+    for i, msg in enumerate(st.session_state.messages):
+        # Les messages déjà rendus ne sont pas "nouveaux"
+        is_new = i >= st.session_state.rendered_count
+
         render_chat_message(
             role=msg["role"],
             content=msg["content"],
-            photo_src=PHOTO_SRC
+            sources=msg.get("sources"),
+            is_new=is_new
         )
+
+    # Mettre à jour le compteur
+    st.session_state.rendered_count = len(st.session_state.messages)
+
 
 # INPUT
 chat_input = st.chat_input(" Posez votre question sur mon CV...")
 prompt = text_from_voice if text_from_voice else chat_input
 
+
 # TRAITEMENT
-
 if prompt:
-    if len(st.session_state.messages) == 0 or st.session_state.messages[-1].get("content") != prompt:
+    # Éviter les doublons
+    last_msg = st.session_state.messages[-1] if st.session_state.messages else None
+    is_duplicate = (
+        last_msg
+        and last_msg.get("role") == "user"
+        and last_msg.get("content") == prompt
+    )
 
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        render_chat_message("user", prompt, PHOTO_SRC)
+    if not is_duplicate:
+        # Ajouter le message utilisateur
+        st.session_state.messages.append({
+            "role": "user",
+            "content": prompt,
+            "sources": []
+        })
+        render_chat_message("user", prompt, is_new=True)
 
-        with st.spinner("Je réfléchis..."):
+        with st.spinner(" Je réfléchis..."):
             try:
                 initial_state = {
                     "question": prompt,
@@ -985,64 +1068,93 @@ if prompt:
 
                 response = final_state.get("response", "")
                 sources = final_state.get("agent_sources", [])
-                
-                if not response:
-                    response = "Je n'ai pas trouvé cette information dans mon CV. Pouvez-vous reformuler ?"
 
-                # Enregistrement pour l'historique session
+                if not response:
+                    response = (
+                        "Je n'ai pas trouvé cette information dans mon CV. "
+                        "Pouvez-vous reformuler ?"
+                    )
+
+                # Sauvegarder en session
                 st.session_state.messages.append({
-                    "role": "assistant", 
+                    "role": "assistant",
                     "content": response,
                     "sources": sources
                 })
 
-                render_chat_message("assistant", response, PHOTO_SRC, sources=sources)
+                render_chat_message(
+                    "assistant", response,
+                    sources=sources, is_new=True
+                )
 
+                # TTS
+                # TTS (Haut parleur)
                 if tts_enabled and response and len(response) < 4000:
                     if response != st.session_state.last_spoken:
                         try:
-                            tts = gTTS(text=response, lang="fr")
-                            audio_bytes = io.BytesIO()
-                            tts.write_to_fp(audio_bytes)
-                            audio_bytes.seek(0)
-                            audio_data = audio_bytes.read()
+                            # Fonction asynchrone pour edge-tts
+                            async def generate_voice():
+                                voice = "fr-FR-HenriNeural"  # Voix d'homme française
+                                communicate = edge_tts.Communicate(response, voice)
+                                audio_data = b""
+                                async for chunk in communicate.stream():
+                                    if chunk["type"] == "audio":
+                                        audio_data += chunk["data"]
+                                return audio_data
 
+                            audio_data = asyncio.run(generate_voice())
+                            
                             st.session_state.last_spoken = response
 
                             if safari_mode:
-                                components.html(create_audio_player(audio_data), height=60)
+                                components.html(
+                                    create_audio_player(audio_data),
+                                    height=60
+                                )
                             else:
-                                st.audio(audio_data, format="audio/mp3", autoplay=True)
+                                st.audio(
+                                    audio_data,
+                                    format="audio/mp3",
+                                    autoplay=True
+                                )
                         except Exception as e:
                             logger.error(f"TTS error: {e}")
 
+                # Debug
                 with st.expander("Debug", expanded=False):
                     dcol1, dcol2, dcol3 = st.columns(3)
                     with dcol1:
-                        st.markdown(f"**Intention:** `{final_state.get('intent')}`")
+                        st.markdown(
+                            f"**Intention:** `{final_state.get('intent')}`"
+                        )
                     with dcol2:
-                        st.markdown(f"**Sources:** `{', '.join(sources) if sources else 'N/A'}`")
+                        st.markdown(
+                            f"**Sources:** "
+                            f"`{', '.join(sources) if sources else 'N/A'}`"
+                        )
                     with dcol3:
-                        if final_state.get("documents"):
-                            st.markdown(f"**RAG:** {len(final_state.get('documents'))} docs")
+                        docs = final_state.get("documents")
+                        if docs:
+                            st.markdown(f"**RAG:** {len(docs)} docs")
 
-                    if final_state.get("sql_query") and final_state.get("sql_query") not in ["Error", "Invalid"]:
-                        st.code(final_state.get("sql_query"), language="sql")
-                    
-                    if final_state.get("github_data"):
-                        st.markdown(f"**GitHub:** {len(final_state.get('github_data'))} repos")
+                    sql_q = final_state.get("sql_query")
+                    if sql_q and sql_q not in ["Error", "Invalid"]:
+                        st.code(sql_q, language="sql")
+
+                    gh = final_state.get("github_data")
+                    if gh:
+                        st.markdown(f"**GitHub:** {len(gh)} repos")
 
             except Exception as e:
                 logger.error(f"Error: {e}")
-                st.error("❌ Une erreur est survenue.")
+                st.error(" Une erreur est survenue. Veuillez réessayer.")
 
-# FOOTER
 
+#  FOOTER
 st.markdown("""
 <div style="text-align: center; margin-top: 50px; padding: 30px; opacity: 0.5;">
     <p style="font-size: 0.85rem;">
-        Développé avec soin par <strong>Amaury Rammanat</strong><br>
-        Python • LangChain • LangGraph • Streamlit
+        Développé par <strong>Amaury Rammanat</strong><br>
     </p>
 </div>
 """, unsafe_allow_html=True)

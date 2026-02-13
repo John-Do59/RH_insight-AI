@@ -12,10 +12,10 @@ RH Insight AI est un assistant conçu pour faciliter le travail des recruteurs e
 
 - **Analyse de documents (RAG)** : Recherche sémantique et extraction d'informations directement depuis les fichiers PDF des CV.
 - **Requêtes de données (SQL)** : Analyse statistique et recherche de critères précis dans la base de données des candidats.
-- **Agent GitHub** : Récupération et analyse en temps réel des dépôts, langages et descriptions de projets de l'utilisateur.
+- **Agent GitHub** : Récupération et analyse en temps réel des dépôts (publics et privés), langages et descriptions de projets.
 - **Orchestration Multi-Agents** : Utilisation de LangGraph pour router les questions vers l'agent le plus pertinent avec un flux hybride séquentiel (SQL -> RAG -> GitHub).
-- **Interface Premium** : Design moderne avec badges de sources (📄 RAG, 🗃️ SQL, 🐙 GitHub) pour une transparence totale.
-- **Interaction vocale** : Support de la synthèse vocale (TTS) et de la reconnaissance vocale (STT).
+- **Interface Premium** : Design "Purple Theme" moderne avec badges de sources et effets de flou (glassmorphism).
+- **Interaction vocale** : Support de la synthèse vocale masculine française haute qualité (`edge-tts`) et de la reconnaissance vocale.
 
 ## Architecture Technique
 

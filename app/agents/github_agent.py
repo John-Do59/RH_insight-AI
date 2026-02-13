@@ -12,7 +12,7 @@ def github_agent(state: dict) -> dict:
     logger.info("GitHub Agent: Fetching repositories...")
     
     try:
-        repos = github_client.get_public_repos()
+        repos = github_client.get_all_repos()
         
         if not repos:
             logger.warning("GitHub Agent: No repositories found or error occurred.")

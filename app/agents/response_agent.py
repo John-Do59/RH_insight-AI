@@ -36,7 +36,8 @@ RÈGLES :
 3. Sois professionnel mais accessible
 4. Base-toi sur le contexte fourni
 5. Mets en valeur le parcours de reconversion
-6. Si info manquante : "Cette information n'est pas dans mon CV"
+6. Si des projets GitHub sont présents dans le contexte, cite explicitement le NOM du repository et décris brièvement ce qu'il fait.
+7. Si info manquante : "Cette information n'est pas dans mon CV"
 """
 
 
@@ -91,10 +92,10 @@ def build_cv_prompt(question: str, context: str, intent: str) -> str:
     """Prompt pour les questions sur le CV."""
     
     intent_hints = {
-        "sql": "Question sur mes compétences techniques, formations ou coordonnées.",
-        "rag": "Question sur mon parcours, mes expériences ou projets.",
-        "github": "Question sur mes dépôts de code, mes projets GitHub et ma stack technique open-source.",
-        "hybrid": "Question complexe nécessitant une synthèse de mon CV, de mes compétences techniques et de mes projets GitHub."
+        "sql": "Réponds précisément sur mes compétences techniques, mes diplômes ou mes informations factuelles.",
+        "rag": "Rédige une réponse narrative sur mon parcours, mes expériences ou mes motivations.",
+        "github": "Donne une liste détaillée de mes projets GitHub, cite leurs noms et explique brièvement les technologies utilisées.",
+        "hybrid": "Fais une synthèse complète incluant mon parcours de reconversion, mes hard skills (SQL) et mes réalisations concrètes sur GitHub."
     }
     
     hint = intent_hints.get(intent, "")
@@ -103,15 +104,15 @@ def build_cv_prompt(question: str, context: str, intent: str) -> str:
 
 {PERSONAL_INFO}
 
-{hint}
+CONSIGNE : {hint}
 
-INFORMATIONS DE MON CV :
+INFORMATIONS DE MON CV (À UTILISER EN PRIORITÉ) :
 {context}
 
 QUESTION DU RECRUTEUR :
 {question}
 
-MA RÉPONSE (en français, première personne, professionnelle) :"""
+MA RÉPONSE (précise, professionnelle, à la première personne) :"""
 
 
 def build_context(rag_docs: list, sql_data: list, github_data: list) -> str:
@@ -132,14 +133,24 @@ def build_context(rag_docs: list, sql_data: list, github_data: list) -> str:
             parts.append(f"  [{i}] {doc_clean}")
 
     if github_data:
-        parts.append("\nPROJETS GITHUB RÉCENTS :")
+        parts.append("\nPROJETS GITHUB RÉCENTS (À CITER PAR LEURS NOMS) :")
         for repo in github_data[:10]:
             name = repo.get("name")
             desc = repo.get("description") or "Pas de description"
             lang = repo.get("language") or "N/A"
             stars = repo.get("stars", 0)
             url = repo.get("url")
-            parts.append(f"  • {name} ({lang}) : {desc} — [{stars}⭐] {url}")
+            topics = ", ".join(repo.get("topics", []))
+            tags = f" (Tags: {topics})" if topics else ""
+            status = "Privé" if repo.get("is_private") else "Public"
+            parts.append(
+                f"  - REPO: {name}\n"
+                f"    ACCÈS: {status}\n"
+                f"    LANGAGE: {lang}{tags}\n"
+                f"    DESCRIPTION: {desc}\n"
+                f"    LIEN: {url}\n"
+                f"    STARS: {stars}"
+            )
     
     return "\n".join(parts) if parts else "Aucune information trouvée."
 

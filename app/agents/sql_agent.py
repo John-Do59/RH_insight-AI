@@ -2,6 +2,7 @@ import re
 from sqlalchemy import text
 from app.llm.ollama_client import get_llm
 from app.sql.database import get_engine
+from app.sql.validators import validate_sql_query, SQLValidationError
 from app.utils.logger import logger
 
 # SCHEMA ADAPTÉ À VOTRE CV
@@ -84,8 +85,12 @@ SQL:"""
         response = llm.invoke(prompt)
         query = extract_sql(response.content)
         
-        if not query.upper().strip().startswith("SELECT"):
-            return {"sql_data": [], "sql_query": "Invalid"}
+        # Validate query for safety before execution
+        try:
+            validate_sql_query(query)
+        except SQLValidationError as e:
+            logger.warning(f"SQL query rejected: {e} — Query: {query}")
+            return {"sql_data": [], "sql_query": f"Rejected: {e}"}
         
         logger.info(f"SQL: {query}")
         

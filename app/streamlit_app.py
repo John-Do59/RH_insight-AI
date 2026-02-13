@@ -31,7 +31,7 @@ def get_base64_image(image_path):
     except FileNotFoundError:
         return None
 
-PHOTO_PATH = Path(__file__).parent / "assets" / "photo_amaury.jpg .png"
+PHOTO_PATH = Path(__file__).parent / "assets" / "photo_amaury.png"
 PHOTO_BASE64 = get_base64_image(PHOTO_PATH)
 
 if PHOTO_BASE64:

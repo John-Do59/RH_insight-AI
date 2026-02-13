@@ -708,12 +708,12 @@ st.markdown(f"""
         border-color: rgba(255, 255, 255, 0.1) !important;
     }}
 
-    .stSpinner > div {
+    .stSpinner > div {{
         border-top-color: #667eea !important;
-    }
+    }}
 
     /* SOURCE BADGES */
-    .source-badge {
+    .source-badge {{
         display: inline-flex;
         align-items: center;
         gap: 4px;
@@ -725,11 +725,11 @@ st.markdown(f"""
         margin-top: 8px;
         text-transform: uppercase;
         letter-spacing: 0.5px;
-    }
-    .badge-rag { background: rgba(102, 126, 234, 0.2); border: 1px solid rgba(102, 126, 234, 0.4); color: #a5b4fc; }
-    .badge-sql { background: rgba(118, 75, 162, 0.2); border: 1px solid rgba(118, 75, 162, 0.4); color: #c4b5fd; }
-    .badge-github { background: rgba(240, 147, 251, 0.2); border: 1px solid rgba(240, 147, 251, 0.4); color: #fbcfe8; }
-    .badge-jobs { background: rgba(0, 230, 118, 0.2); border: 1px solid rgba(0, 230, 118, 0.4); color: #69f0ae; }
+    }}
+    .badge-rag {{ background: rgba(102, 126, 234, 0.2); border: 1px solid rgba(102, 126, 234, 0.4); color: #a5b4fc; }}
+    .badge-sql {{ background: rgba(118, 75, 162, 0.2); border: 1px solid rgba(118, 75, 162, 0.4); color: #c4b5fd; }}
+    .badge-github {{ background: rgba(240, 147, 251, 0.2); border: 1px solid rgba(240, 147, 251, 0.4); color: #fbcfe8; }}
+    .badge-jobs {{ background: rgba(0, 230, 118, 0.2); border: 1px solid rgba(0, 230, 118, 0.4); color: #69f0ae; }}
 </style>
 """, unsafe_allow_html=True)
 

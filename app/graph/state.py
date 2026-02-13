@@ -14,14 +14,17 @@ class AgentState(TypedDict):
     # Documents récupérés par le RAG
     documents: List[str]
     
-    # Données récupérées par SQL
-    sql_data: Any
+    # Données récupérées par GitHub
+    github_data: Any
     
-    # Requête SQL générée (optionnel, pour debug)
-    sql_query: str
+    # Données des offres d'emploi (Phase Jobs)
+    job_results: List[Dict[str, Any]]
+    
+    # Trace des agents ayant contribué à la réponse
+    agent_sources: List[str]
     
     # Réponse finale générée
     response: str
     
-    # Historique des messages (optionnel pour l'instant)
+    # Historique des messages
     messages: Annotated[List[Dict[str, str]], operator.add]

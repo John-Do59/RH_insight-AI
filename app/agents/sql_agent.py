@@ -99,11 +99,19 @@ SQL:"""
             result = conn.execute(text(query))
             rows = [dict(zip(result.keys(), row)) for row in result.fetchall()]
         
-        return {"sql_data": rows, "sql_query": query}
+        return {
+            "sql_data": rows,
+            "sql_query": query,
+            "agent_sources": state.get("agent_sources", []) + ["sql"]
+        }
         
     except Exception as e:
-        logger.error(f"SQL error: {e}")
-        return {"sql_data": [], "sql_query": "Error"}
+        logger.error(f"Error in SQL agent: {e}")
+        return {
+            "sql_data": [], 
+            "sql_query": "Error",
+            "agent_sources": state.get("agent_sources", []) + ["sql"]
+        }
 
 
 def extract_sql(content: str) -> str:

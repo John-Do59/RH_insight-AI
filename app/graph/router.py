@@ -4,7 +4,7 @@ Router — Détection d'intention et routage vers les agents spécialisés.
 Extrait la logique de routage de graph.py pour une meilleure modularité.
 """
 
-from app.config.constants import INTENT_RAG, INTENT_SQL
+from app.config.constants import INTENT_RAG, INTENT_SQL, INTENT_GITHUB
 
 
 def router(state: dict) -> str:
@@ -15,7 +15,7 @@ def router(state: dict) -> str:
         state: The current LangGraph agent state containing the 'intent' key.
 
     Returns:
-        The name of the next node to route to ('rag', 'sql', or 'response').
+        The name of the next node to route to ('rag', 'sql', 'github', or 'response').
     """
     intent = state.get("intent", "general")
 
@@ -25,6 +25,8 @@ def router(state: dict) -> str:
         return "rag"
     elif intent == INTENT_SQL:
         return "sql"
+    elif intent == INTENT_GITHUB:
+        return "github"
     else:
         return "response"
 
@@ -33,13 +35,18 @@ def sql_router(state: dict) -> str:
     """
     Post-SQL routing: determines if the flow continues to RAG (hybrid)
     or goes directly to response.
-
-    Args:
-        state: The current LangGraph agent state.
-
-    Returns:
-        'rag' if intent is hybrid, 'response' otherwise.
     """
     if state.get("intent") == "hybrid":
         return "rag"
     return "response"
+
+
+def rag_router(state: dict) -> str:
+    """
+    Post-RAG routing: determines if the flow continues to GitHub (hybrid)
+    or goes directly to response.
+    """
+    if state.get("intent") == "hybrid":
+        return "github"
+    return "response"
+

@@ -17,15 +17,17 @@ def classify_intent(state):
 
     CATÉGORIES :
     - '{INTENT_RAG}': Questions qualitatives ou narratives sur le parcours.
-      Exemples: "Quels sont ses projets ?", "Décris ses missions", "Résumé du parcours".
+      Exemples: "Décris ses missions", "Résumé du parcours", "Quels sont ses hobbys ?".
     - '{INTENT_SQL}': Questions sur les compétences (SKILLS), les faits précis ou les listes.
       Exemples: "A-t-il des compétences en Python ?", "Liste ses diplômes", "Où habite-t-il ?".
-    - 'hybrid': Questions complexes demandant à la fois des listes/faits ET des explications/contexte. 
-      Exemples: "Quelles sont ses compétences et sur quels projets les a-t-il utilisées ?", "Parle-moi de son expérience en SQL".
+    - '{INTENT_GITHUB}': Questions sur les projets de John-Do59, ses repos GitHub ou son code.
+      Exemples: "Quels sont tes projets GitHub ?", "Montre-moi ton code", "Donne-moi tes repos".
+    - 'hybrid': Questions complexes demandant à la fois des listes/faits ET des explications/contexte/projets. 
+      Exemples: "Quelles sont ses compétences et sur quels projets les a-t-il utilisées ?", "Parle-moi de son expérience en SQL et montre-moi un projet lié".
     - '{INTENT_GENERAL}': Salutations ou discussion hors sujet.
 
     CRITIQUE :
-    - Pour TOUTE question mélangeant compétences (SQL) et expérience détaillée (RAG), utilise 'hybrid'.
+    - Pour TOUTE question mélangeant compétences (SQL) et expérience détaillée (RAG ou GITHUB), utilise 'hybrid'.
     - RENVOIE UNIQUEMENT LE NOM DE LA CATÉGORIE EN MINUSCULES.
     
     QUESTION: {question}
@@ -42,12 +44,15 @@ def classify_intent(state):
         # Ensure we only have the keyword
         if "hybrid" in content:
             intent = "hybrid"
+        elif INTENT_GITHUB in content or "github" in content:
+            intent = INTENT_GITHUB
         elif INTENT_RAG in content:
             intent = INTENT_RAG
         elif INTENT_SQL in content:
             intent = INTENT_SQL
         else:
             intent = INTENT_GENERAL
+
             
         logger.info(f"Detected intent: {intent} for question: {question}")
         return {"intent": intent}

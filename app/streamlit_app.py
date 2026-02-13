@@ -708,9 +708,28 @@ st.markdown(f"""
         border-color: rgba(255, 255, 255, 0.1) !important;
     }}
 
-    .stSpinner > div {{
+    .stSpinner > div {
         border-top-color: #667eea !important;
-    }}
+    }
+
+    /* SOURCE BADGES */
+    .source-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 10px;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-right: 6px;
+        margin-top: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .badge-rag { background: rgba(102, 126, 234, 0.2); border: 1px solid rgba(102, 126, 234, 0.4); color: #a5b4fc; }
+    .badge-sql { background: rgba(118, 75, 162, 0.2); border: 1px solid rgba(118, 75, 162, 0.4); color: #c4b5fd; }
+    .badge-github { background: rgba(240, 147, 251, 0.2); border: 1px solid rgba(240, 147, 251, 0.4); color: #fbcfe8; }
+    .badge-jobs { background: rgba(0, 230, 118, 0.2); border: 1px solid rgba(0, 230, 118, 0.4); color: #69f0ae; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -730,12 +749,21 @@ components.html("""
 """, height=0)
 
 # FONCTION POUR AFFICHER UN MESSAGE AVEC PHOTO RAINBOW
-def render_chat_message(role: str, content: str, photo_src: str):
-    """Affiche un message de chat avec photo rainbow border."""
+def render_chat_message(role: str, content: str, photo_src: str, sources: list = None):
+    """Affiche un message de chat avec photo rainbow border et badges sources."""
     message_class = "chat-message-assistant" if role == "assistant" else "chat-message-user"
 
     content_html = content.replace("\n", "<br>")
     content_html = content_html.replace("**", "<strong>").replace("**", "</strong>")
+
+    # Badges sources
+    badges_html = ""
+    if role == "assistant" and sources:
+        badges_html = '<div style="margin-top: 10px;">'
+        if "rag" in sources: badges_html += '<span class="source-badge badge-rag">📄 RAG (CV)</span>'
+        if "sql" in sources: badges_html += '<span class="source-badge badge-sql">🗃️ SQL (Faits)</span>'
+        if "github" in sources: badges_html += '<span class="source-badge badge-github">🐙 GitHub (Code)</span>'
+        badges_html += '</div>'
 
     html = f"""
     <div class="custom-chat-message {message_class}">
@@ -744,6 +772,7 @@ def render_chat_message(role: str, content: str, photo_src: str):
         </div>
         <div class="chat-content">
             {content_html}
+            {badges_html}
         </div>
     </div>
     """
@@ -828,12 +857,12 @@ with st.expander("Exemples de questions à me poser", expanded=True):
     with col3:
         st.markdown("""
         <div class="suggestion-card">
-            <h4>Parcours</h4>
+            <h4>Projets & Code</h4>
             <ul>
-                <li>Parle-moi de tes formations</li>
-                <li>Tes expériences pro ?</li>
-                <li>Quels projets ?</li>
-                <li>Pourquoi la reconversion ?</li>
+                <li>Quels sont tes projets GitHub ?</li>
+                <li>Montre-moi ton code</li>
+                <li>Tes recents repos ?</li>
+                <li>Tes technos favorites ?</li>
             </ul>
         </div>
         """, unsafe_allow_html=True)
@@ -955,10 +984,19 @@ if prompt:
                 final_state = app.invoke(initial_state)
 
                 response = final_state.get("response", "")
+                sources = final_state.get("agent_sources", [])
+                
                 if not response:
                     response = "Je n'ai pas trouvé cette information dans mon CV. Pouvez-vous reformuler ?"
 
-                render_chat_message("assistant", response, PHOTO_SRC)
+                # Enregistrement pour l'historique session
+                st.session_state.messages.append({
+                    "role": "assistant", 
+                    "content": response,
+                    "sources": sources
+                })
+
+                render_chat_message("assistant", response, PHOTO_SRC, sources=sources)
 
                 if tts_enabled and response and len(response) < 4000:
                     if response != st.session_state.last_spoken:
@@ -979,17 +1017,20 @@ if prompt:
                             logger.error(f"TTS error: {e}")
 
                 with st.expander("Debug", expanded=False):
-                    dcol1, dcol2 = st.columns(2)
+                    dcol1, dcol2, dcol3 = st.columns(3)
                     with dcol1:
                         st.markdown(f"**Intention:** `{final_state.get('intent')}`")
                     with dcol2:
+                        st.markdown(f"**Sources:** `{', '.join(sources) if sources else 'N/A'}`")
+                    with dcol3:
                         if final_state.get("documents"):
                             st.markdown(f"**RAG:** {len(final_state.get('documents'))} docs")
 
                     if final_state.get("sql_query") and final_state.get("sql_query") not in ["Error", "Invalid"]:
                         st.code(final_state.get("sql_query"), language="sql")
-
-                st.session_state.messages.append({"role": "assistant", "content": response})
+                    
+                    if final_state.get("github_data"):
+                        st.markdown(f"**GitHub:** {len(final_state.get('github_data'))} repos")
 
             except Exception as e:
                 logger.error(f"Error: {e}")

@@ -1,9 +1,10 @@
 from langgraph.graph import StateGraph, END
 from app.graph.state import AgentState
-from app.graph.router import router, sql_router
+from app.graph.router import router, sql_router, rag_router
 from app.agents.intent_agent import classify_intent
 from app.agents.rag_agent import rag_agent
 from app.agents.sql_agent import sql_agent
+from app.agents.github_agent import github_agent
 from app.agents.response_agent import response_agent
 
 
@@ -15,7 +16,8 @@ def create_graph():
         User Input → Intent Detection → Router
         ├── rag → RAG Agent → Response Agent → END
         ├── sql → SQL Agent → Response Agent → END
-        ├── hybrid → SQL Agent → RAG Agent → Response Agent → END
+        ├── github → GitHub Agent → Response Agent → END
+        ├── hybrid → SQL Agent → RAG Agent → GitHub Agent → Response Agent → END
         └── general → Response Agent → END
     """
     workflow = StateGraph(AgentState)
@@ -24,6 +26,7 @@ def create_graph():
     workflow.add_node("intent", classify_intent)
     workflow.add_node("rag", rag_agent)
     workflow.add_node("sql", sql_agent)
+    workflow.add_node("github", github_agent)
     workflow.add_node("response", response_agent)
     
     # Set Entry Point
@@ -36,6 +39,7 @@ def create_graph():
         {
             "rag": "rag",
             "sql": "sql",
+            "github": "github",
             "response": "response"
         }
     )
@@ -50,11 +54,22 @@ def create_graph():
         }
     )
     
+    # Post-RAG routing: hybrid → GitHub, otherwise → Response
+    workflow.add_conditional_edges(
+        "rag",
+        rag_router,
+        {
+            "github": "github",
+            "response": "response"
+        }
+    )
+    
     # Direct Edges
-    workflow.add_edge("rag", "response")
+    workflow.add_edge("github", "response")
     workflow.add_edge("response", END)
     
     return workflow.compile()
+
 
 
 # Global app instance

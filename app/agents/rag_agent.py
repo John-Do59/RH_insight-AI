@@ -14,7 +14,11 @@ def rag_agent(state):
         docs = vector_store.similarity_search(question, k=5)
         doc_contents = [doc.page_content for doc in docs]
         
-        return {"documents": doc_contents}
+        return {
+            "documents": doc_contents,
+            "agent_sources": state.get("agent_sources", []) + ["rag"]
+        }
     except Exception as e:
         logger.error(f"Error in RAG agent: {e}")
         return {"documents": []}
+

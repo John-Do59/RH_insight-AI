@@ -48,9 +48,10 @@ def response_agent(state):
     intent = state.get("intent", "general")
     rag_docs = state.get("documents", [])
     sql_data = state.get("sql_data", [])
+    github_data = state.get("github_data", [])
     
     llm = get_llm()
-    context = build_context(rag_docs, sql_data)
+    context = build_context(rag_docs, sql_data, github_data)
     
     if intent == "general":
         prompt = build_greeting_prompt(question)
@@ -92,7 +93,8 @@ def build_cv_prompt(question: str, context: str, intent: str) -> str:
     intent_hints = {
         "sql": "Question sur mes compétences techniques, formations ou coordonnées.",
         "rag": "Question sur mon parcours, mes expériences ou projets.",
-        "hybrid": "Question combinant compétences et expériences."
+        "github": "Question sur mes dépôts de code, mes projets GitHub et ma stack technique open-source.",
+        "hybrid": "Question complexe nécessitant une synthèse de mon CV, de mes compétences techniques et de mes projets GitHub."
     }
     
     hint = intent_hints.get(intent, "")
@@ -112,22 +114,32 @@ QUESTION DU RECRUTEUR :
 MA RÉPONSE (en français, première personne, professionnelle) :"""
 
 
-def build_context(rag_docs: list, sql_data: list) -> str:
-    """Construit le contexte."""
+def build_context(rag_docs: list, sql_data: list, github_data: list) -> str:
+    """Construit le contexte à partir de multiples sources."""
     parts = []
     
     if sql_data:
-        parts.append("DONNÉES STRUCTURÉES :")
+        parts.append("DONNÉES DU CV (Compétences/Faits) :")
         for row in sql_data[:15]:
             if isinstance(row, dict):
                 formatted = " | ".join([f"{k}: {v}" for k, v in row.items() if v])
                 parts.append(f"  • {formatted}")
     
     if rag_docs:
-        parts.append("\nEXTRAITS DU CV :")
+        parts.append("\nEXTRAITS DESCRIPTIFS DU CV :")
         for i, doc in enumerate(rag_docs[:5], 1):
             doc_clean = doc[:600] + "..." if len(doc) > 600 else doc
             parts.append(f"  [{i}] {doc_clean}")
+
+    if github_data:
+        parts.append("\nPROJETS GITHUB RÉCENTS :")
+        for repo in github_data[:10]:
+            name = repo.get("name")
+            desc = repo.get("description") or "Pas de description"
+            lang = repo.get("language") or "N/A"
+            stars = repo.get("stars", 0)
+            url = repo.get("url")
+            parts.append(f"  • {name} ({lang}) : {desc} — [{stars}⭐] {url}")
     
     return "\n".join(parts) if parts else "Aucune information trouvée."
 

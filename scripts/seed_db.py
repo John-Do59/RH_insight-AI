@@ -95,9 +95,7 @@ def seed_database():
     )
     """)
     
-    # =============================
     # INSERTION DE VOS DONNÉES
-    # =============================
     
     # Candidat
     cursor.execute("""

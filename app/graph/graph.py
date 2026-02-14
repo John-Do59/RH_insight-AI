@@ -1,6 +1,6 @@
 from langgraph.graph import StateGraph, END
 from app.graph.state import AgentState
-from app.graph.router import router, sql_router, rag_router
+from app.graph.router import router
 from app.agents.intent_agent import classify_intent
 from app.agents.rag_agent import rag_agent
 from app.agents.sql_agent import sql_agent
@@ -32,7 +32,7 @@ def create_graph():
     # Set Entry Point
     workflow.set_entry_point("intent")
     
-    # Intent → Agent routing
+    # Intent Agent routing
     workflow.add_conditional_edges(
         "intent",
         router,
@@ -44,27 +44,9 @@ def create_graph():
         }
     )
     
-    # Post-SQL routing: hybrid → RAG, otherwise → Response
-    workflow.add_conditional_edges(
-        "sql",
-        sql_router,
-        {
-            "rag": "rag",
-            "response": "response"
-        }
-    )
-    
-    # Post-RAG routing: hybrid → GitHub, otherwise → Response
-    workflow.add_conditional_edges(
-        "rag",
-        rag_router,
-        {
-            "github": "github",
-            "response": "response"
-        }
-    )
-    
-    # Direct Edges
+    # Direct Edges (Join)
+    workflow.add_edge("rag", "response")
+    workflow.add_edge("sql", "response")
     workflow.add_edge("github", "response")
     workflow.add_edge("response", END)
     

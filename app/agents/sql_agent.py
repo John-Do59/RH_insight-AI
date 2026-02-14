@@ -1,11 +1,11 @@
 import re
 from sqlalchemy import text
-from app.llm.ollama_client import get_llm
+from app.llm.ollama_client import get_fast_llm
 from app.sql.database import get_engine
 from app.sql.validators import validate_sql_query, SQLValidationError
 from app.utils.logger import logger
 
-# SCHEMA ADAPTÉ À VOTRE CV
+# SCHEMA ADAPTÉ AU CV
 SCHEMA_INFO = """
 TABLE candidates (mes informations personnelles):
   - id, first_name (Amaury), last_name (Rammanat)
@@ -64,7 +64,7 @@ def sql_agent(state):
     Génère et exécute une requête SQL pour le CV d'Amaury.
     """
     question = state["question"]
-    llm = get_llm()
+    llm = get_fast_llm()
     
     prompt = f"""Tu génères des requêtes SQL pour interroger le CV d'Amaury Rammanat.
 Il n'y a qu'UN SEUL candidat, pas besoin de filtrer par nom.

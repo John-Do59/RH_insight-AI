@@ -284,7 +284,7 @@ st.markdown(f"""
         pointer-events: none;
     }}
 
-    /* ── User message ── */
+    /* User message */
     .chat-message-user {{
         background: linear-gradient(135deg, rgba(102, 126, 234, 0.10), rgba(118, 75, 162, 0.10));
         border: 1px solid rgba(139, 92, 246, 0.15);
@@ -484,12 +484,12 @@ st.markdown(f"""
         text-shadow: 0 0 10px rgba(167, 139, 250, 0.5);
     }}
 
-    /* ═══ HIDE DEFAULT STREAMLIT CHAT ═══ */
+    /* HIDE DEFAULT STREAMLIT CHAT*/
     [data-testid="stChatMessage"] {{
         display: none !important;
     }}
 
-    /* ═══ CHAT INPUT — PURPLE BORDER ═══ */
+    /* CHAT INPUT — PURPLE BORDER */
     [data-testid="stBottom"] > div {{
         background: transparent !important;
     }}
@@ -625,7 +625,7 @@ st.markdown(f"""
         padding-left: 12px;
     }}
 
-    /* ═══ AUDIO ═══ */
+    /* AUDIO */
     .audio-container {{
         background: rgba(255, 255, 255, 0.03);
         backdrop-filter: blur(15px);
@@ -653,7 +653,7 @@ st.markdown(f"""
         box-shadow: 0 5px 15px rgba(124, 58, 237, 0.3);
     }}
 
-    /* ═══ RESPONSIVE ═══ */
+    /* RESPONSIVE */
     @media (max-width: 768px) {{
         .header-content {{
             flex-direction: column;
@@ -712,7 +712,7 @@ st.markdown(f"""
         border-top-color: #7c3aed !important;
     }}
 
-    /* ═══ SOURCE BADGES ═══ */
+    /* SOURCE BADGES */
     .source-badge {{
         display: inline-flex;
         align-items: center;
@@ -1057,97 +1057,166 @@ if prompt:
         })
         render_chat_message("user", prompt, is_new=True)
 
-        with st.spinner(" Je réfléchis..."):
-            try:
-                initial_state = {
-                    "question": prompt,
-                    "messages": [{"role": "user", "content": prompt}]
-                }
+        try:
+            initial_state = {
+                "question": prompt,
+                "messages": [{"role": "user", "content": prompt}],
+                "documents": [],
+                "sql_data": [],
+                "sql_query": "",
+                "github_data": [],
+                "agent_sources": [],
+                "intent": "general",
+                "response": ""
+            }
 
-                final_state = app.invoke(initial_state)
+            # LangGraph Streaming avec UI Status
+            with st.status("🔍 Analyse de votre demande...", expanded=True) as status:
+                final_state = {}
+                for event in app.stream(initial_state, stream_mode="updates"):
+                    for node, data in event.items():
+                        if node == "intent":
+                            status.write(f"🎯 Intention détectée : **{data.get('intent', 'N/A')}**")
+                        elif node == "sql":
+                            status.write("📊 Recherche dans la base SQL...")
+                        elif node == "rag":
+                            status.write("📖 Analyse sémantique des CV...")
+                        elif node == "github":
+                            status.write("💻 Exploration des projets GitHub...")
+                        elif node == "response":
+                            status.write("✍️ Rédaction de la réponse...")
+                            final_state.update(data)
+                    # Accumuler les états
+                    for k, v in event.items():
+                        if isinstance(v, dict):
+                            final_state.update(v)
+                
+                status.update(label="✅ Analyse terminée", state="complete", expanded=False)
 
-                response = final_state.get("response", "")
-                sources = final_state.get("agent_sources", [])
+            final_prompt = final_state.get("final_prompt")
+            sources = final_state.get("agent_sources", [])
 
-                if not response:
-                    response = (
-                        "Je n'ai pas trouvé cette information dans mon CV. "
-                        "Pouvez-vous reformuler ?"
+            if not final_prompt:
+                response = "Désolé, je n'ai pas pu élaborer de réponse."
+                st.session_state.messages.append({"role": "assistant", "content": response, "sources": sources})
+                render_chat_message("assistant", response, sources=sources, is_new=True)
+            else:
+                # STREAMING DE LA RÉPONSE FINALE
+                import re
+                from app.llm.ollama_client import get_llm
+                llm = get_llm()
+                
+                full_response = ""
+                placeholder = st.empty()
+                
+                # Streaming réel
+                for chunk in llm.stream(final_prompt):
+                    full_response += chunk.content
+                    
+                    # Nettoyage robuste pour le streaming (R1 thinking process)
+                    display_text = full_response
+                    if '<think>' in display_text:
+                        if '</think>' in display_text:
+                            display_text = re.sub(r'<think>.*?</think>', '', display_text, flags=re.DOTALL)
+                        else:
+                            # On cache tout ce qui est dans le bloc <think> en cours
+                            display_text = display_text.split('<think>')[0]
+                    
+                    display_text = display_text.strip()
+                    
+                    # Update UI
+                    if display_text:
+                        # Utilisation de markdown standard pour éviter les bugs de <br> dans l'HTML partiel
+                        placeholder.markdown(
+                            f'<div class="custom-chat-message chat-message-assistant">'
+                            f'<div class="chat-avatar-wrapper"><img src="{ASSISTANT_PHOTO}" class="chat-avatar"></div>'
+                            f'<div class="chat-content">{display_text}</div>'
+                            '</div>', 
+                            unsafe_allow_html=True
+                        )
+                    else:
+                        # Status pendant que l'IA réfléchit
+                        placeholder.markdown(
+                            f'<div class="custom-chat-message chat-message-assistant">'
+                            f'<div class="chat-avatar-wrapper"><img src="{ASSISTANT_PHOTO}" class="chat-avatar"></div>'
+                            f'<div class="chat-content"><em>Réflexion en cours...</em></div>'
+                            '</div>', 
+                            unsafe_allow_html=True
+                        )
+                
+                response = re.sub(r'<think>.*?</think>', '', full_response, flags=re.DOTALL).strip()
+
+            # Sauvegarder en session
+            st.session_state.messages.append({
+                "role": "assistant",
+                "content": response,
+                "sources": sources
+            })
+        except Exception as e:
+            logger.error(f"Error: {e}")
+            st.error(" Une erreur est survenue. Veuillez réessayer.")
+
+            # TTS
+            # TTS (Haut parleur)
+            if tts_enabled and response and len(response) < 4000:
+                if response != st.session_state.last_spoken:
+                    try:
+                        # Fonction asynchrone pour edge-tts
+                        async def generate_voice():
+                            voice = "fr-FR-HenriNeural"  # Voix d'homme française
+                            communicate = edge_tts.Communicate(response, voice)
+                            audio_data = b""
+                            async for chunk in communicate.stream():
+                                if chunk["type"] == "audio":
+                                    audio_data += chunk["data"]
+                            return audio_data
+
+                        audio_data = asyncio.run(generate_voice())
+                        
+                        st.session_state.last_spoken = response
+
+                        if safari_mode:
+                            components.html(
+                                create_audio_player(audio_data),
+                                height=60
+                            )
+                        else:
+                            st.audio(
+                                audio_data,
+                                format="audio/mp3",
+                                autoplay=True
+                            )
+                    except Exception as e:
+                        logger.error(f"TTS error: {e}")
+
+            # Debug
+            with st.expander("Debug", expanded=False):
+                dcol1, dcol2, dcol3 = st.columns(3)
+                with dcol1:
+                    st.markdown(
+                        f"**Intention:** `{final_state.get('intent')}`"
                     )
+                with dcol2:
+                    st.markdown(
+                        f"**Sources:** "
+                        f"`{', '.join(sources) if sources else 'N/A'}`"
+                    )
+                with dcol3:
+                    docs = final_state.get("documents")
+                    if docs:
+                        st.markdown(f"**RAG:** {len(docs)} docs")
 
-                # Sauvegarder en session
-                st.session_state.messages.append({
-                    "role": "assistant",
-                    "content": response,
-                    "sources": sources
-                })
+                sql_q = final_state.get("sql_query")
+                if sql_q and sql_q not in ["Error", "Invalid"]:
+                    st.code(sql_q, language="sql")
 
-                render_chat_message(
-                    "assistant", response,
-                    sources=sources, is_new=True
-                )
+                gh = final_state.get("github_data")
+                if gh:
+                    st.markdown(f"**GitHub:** {len(gh)} repos")
 
-                # TTS
-                # TTS (Haut parleur)
-                if tts_enabled and response and len(response) < 4000:
-                    if response != st.session_state.last_spoken:
-                        try:
-                            # Fonction asynchrone pour edge-tts
-                            async def generate_voice():
-                                voice = "fr-FR-HenriNeural"  # Voix d'homme française
-                                communicate = edge_tts.Communicate(response, voice)
-                                audio_data = b""
-                                async for chunk in communicate.stream():
-                                    if chunk["type"] == "audio":
-                                        audio_data += chunk["data"]
-                                return audio_data
-
-                            audio_data = asyncio.run(generate_voice())
-                            
-                            st.session_state.last_spoken = response
-
-                            if safari_mode:
-                                components.html(
-                                    create_audio_player(audio_data),
-                                    height=60
-                                )
-                            else:
-                                st.audio(
-                                    audio_data,
-                                    format="audio/mp3",
-                                    autoplay=True
-                                )
-                        except Exception as e:
-                            logger.error(f"TTS error: {e}")
-
-                # Debug
-                with st.expander("Debug", expanded=False):
-                    dcol1, dcol2, dcol3 = st.columns(3)
-                    with dcol1:
-                        st.markdown(
-                            f"**Intention:** `{final_state.get('intent')}`"
-                        )
-                    with dcol2:
-                        st.markdown(
-                            f"**Sources:** "
-                            f"`{', '.join(sources) if sources else 'N/A'}`"
-                        )
-                    with dcol3:
-                        docs = final_state.get("documents")
-                        if docs:
-                            st.markdown(f"**RAG:** {len(docs)} docs")
-
-                    sql_q = final_state.get("sql_query")
-                    if sql_q and sql_q not in ["Error", "Invalid"]:
-                        st.code(sql_q, language="sql")
-
-                    gh = final_state.get("github_data")
-                    if gh:
-                        st.markdown(f"**GitHub:** {len(gh)} repos")
-
-            except Exception as e:
-                logger.error(f"Error: {e}")
-                st.error(" Une erreur est survenue. Veuillez réessayer.")
+        except Exception as e:
+            logger.error(f"Error: {e}")
+            st.error(" Une erreur est survenue. Veuillez réessayer.")
 
 
 #  FOOTER

@@ -31,13 +31,13 @@ POINTS FORTS À METTRE EN AVANT :
 - Passionné et curieux (veille techno, projets persos)
 
 RÈGLES :
-1. Réponds TOUJOURS en français
-2. Utilise "je", "mon", "mes" 
-3. Sois professionnel mais accessible
-4. Base-toi sur le contexte fourni
-5. Mets en valeur le parcours de reconversion
-6. Si des projets GitHub sont présents dans le contexte, cite explicitement le NOM du repository et décris brièvement ce qu'il fait.
-7. Si info manquante : "Cette information n'est pas dans mon CV"
+1. Réponds EXCLUSIVEMENT en français de haute qualité.
+2. Utilise un ton professionnel, courtois et engageant.
+3. Utilise "je", "mon", "mes" pour parler au nom d'Amaury.
+4. Évite les anglicismes inutiles et soigne l'orthographe.
+5. Base-toi uniquement sur le contexte fourni.
+6. Si des projets GitHub sont présents, cite-les par leur nom exact.
+7. Si une info manque : "Cette information n'est pas précisée dans mon CV."
 """
 
 
@@ -59,18 +59,10 @@ def response_agent(state):
     else:
         prompt = build_cv_prompt(question, context, intent)
     
-    try:
-        response = llm.invoke(prompt)
-        content = clean_response(response.content)
-        
-        if not content or len(content) < 10:
-            content = "Je n'ai pas cette information précise dans mon CV. Pouvez-vous reformuler ?"
-        
-        return {"response": content}
-        
-    except Exception as e:
-        logger.error(f"Response error: {e}")
-        return {"response": "Désolé, une erreur est survenue. Réessayez."}
+    return {
+        "final_prompt": prompt,
+        "agent_sources": state.get("agent_sources", []) + ["response"]
+    }
 
 
 def build_greeting_prompt(question: str) -> str:

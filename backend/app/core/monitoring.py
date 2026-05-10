@@ -15,17 +15,32 @@ def profile_async(name: str):
     Decorator to measure execution time of an async function.
     """
     def decorator(func: Callable):
-        @wraps(func)
-        async def wrapper(*args, **kwargs) -> Any:
-            start_time = time.perf_counter()
-            try:
-                result = await func(*args, **kwargs)
-                return result
-            finally:
-                end_time = time.perf_counter()
-                elapsed = end_time - start_time
-                logger.info(f"PROFILING | {name} | Duration: {elapsed:.4f}s")
-        return wrapper
+        import inspect
+        
+        if inspect.isasyncgenfunction(func):
+            @wraps(func)
+            async def async_gen_wrapper(*args, **kwargs):
+                start_time = time.perf_counter()
+                try:
+                    async for item in func(*args, **kwargs):
+                        yield item
+                finally:
+                    end_time = time.perf_counter()
+                    elapsed = end_time - start_time
+                    logger.info(f"PROFILING | {name} | Duration: {elapsed:.4f}s")
+            return async_gen_wrapper
+        else:
+            @wraps(func)
+            async def async_func_wrapper(*args, **kwargs):
+                start_time = time.perf_counter()
+                try:
+                    result = await func(*args, **kwargs)
+                    return result
+                finally:
+                    end_time = time.perf_counter()
+                    elapsed = end_time - start_time
+                    logger.info(f"PROFILING | {name} | Duration: {elapsed:.4f}s")
+            return async_func_wrapper
     return decorator
 
 class MetricsCollector:

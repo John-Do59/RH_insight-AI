@@ -172,21 +172,29 @@ const handleSendMessage = async () => {
   inputText.value = ''
   isTyping.value = true
 
+  // Add an empty assistant message to fill with tokens
+  const messageIndex = messages.value.push({
+    role: 'assistant',
+    content: '',
+    sources: ['streaming...']
+  }) - 1
+
   try {
-    const history = messages.value.slice(0, -1) // All messages except the last user message
-    const data = await chatService.sendMessage(question, history)
+    const history = messages.value.slice(0, -2) // Exclude current user msg and empty assistant msg
     
-    messages.value.push({
-      role: 'assistant',
-      content: data.response,
-      sources: data.sources,
-      intent: data.intent
+    await chatService.streamMessage(question, history, (token) => {
+      isTyping.value = false // Hide typing indicator once we start receiving tokens
+      messages.value[messageIndex].content += token
+      nextTick(() => scrollToBottom())
     })
+    
+    // Finalize message (remove 'streaming...' tag)
+    messages.value[messageIndex].sources = ['finalized']
+    
   } catch (err) {
-    messages.value.push({
-      role: 'assistant',
-      content: "Désolé, une erreur est survenue lors de la communication avec le serveur."
-    })
+    console.error('Chat error:', err)
+    messages.value[messageIndex].content = "Désolé, une erreur est survenue lors de la communication avec le serveur."
+    messages.value[messageIndex].sources = ['error']
   } finally {
     isTyping.value = false
     nextTick(() => scrollToBottom())

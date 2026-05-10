@@ -6,20 +6,23 @@ from backend.app.models.user import User
 
 router = APIRouter()
 
-@router.post("/", response_model=ChatResponse)
+from fastapi.responses import StreamingResponse
+import json
+
+@router.post("/")
 async def chat_endpoint(
     request: ChatRequest, 
     current_user: User = Depends(get_current_user)
 ):
     """
-    Endpoint principal du chat. Nécessite une authentification JWT.
+    Endpoint principal du chat avec Streaming.
     """
-    try:
-        result = await chat_service.process_question(
+    async def stream_tokens():
+        async for token in chat_service.process_question(
             question=request.question,
             history=request.history
-        )
-        return ChatResponse(**result)
-    except Exception as e:
-        # En production, loggez l'erreur réelle ici
-        raise HTTPException(status_code=500, detail=str(e))
+        ):
+            # On envoie du JSON ou du texte brut. Pour simplifier le frontend, texte brut.
+            yield token
+
+    return StreamingResponse(stream_tokens(), media_type="text/event-stream")

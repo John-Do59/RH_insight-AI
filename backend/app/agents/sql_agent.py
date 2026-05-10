@@ -59,7 +59,11 @@ SQL: SELECT skill_name, level FROM skills WHERE LOWER(skill_name) LIKE '%ia%' OR
 """
 
 
-def sql_agent(state):
+from backend.app.core.monitoring import profile_async
+from backend.app.sql.database import get_async_engine
+
+@profile_async("SQL Agent")
+async def sql_agent(state):
     """
     Génère et exécute une requête SQL pour le CV d'Amaury.
     """
@@ -82,7 +86,7 @@ Question: {question}
 SQL:"""
     
     try:
-        response = llm.invoke(prompt)
+        response = await llm.ainvoke(prompt)
         query = extract_sql(response.content)
         
         # Validate query for safety before execution
@@ -94,9 +98,9 @@ SQL:"""
         
         logger.info(f"SQL: {query}")
         
-        engine = get_engine()
-        with engine.connect() as conn:
-            result = conn.execute(text(query))
+        engine = get_async_engine()
+        async with engine.connect() as conn:
+            result = await conn.execute(text(query))
             rows = [dict(zip(result.keys(), row)) for row in result.fetchall()]
         
         return {

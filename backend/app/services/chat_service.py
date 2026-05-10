@@ -1,14 +1,17 @@
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, AsyncGenerator
 from backend.app.graph.graph import app as agent_graph
 from backend.app.schemas.chat import ChatMessage
+from backend.app.core.monitoring import profile_async
+from backend.app.llm.ollama_client import get_llm, get_fast_llm
+from backend.app.utils.logger import logger
 
 class ChatService:
     @staticmethod
-    async def process_question(question: str, history: List[ChatMessage] = None) -> Dict[str, Any]:
+    @profile_async("Global Chat Request")
+    async def process_question(question: str, history: List[ChatMessage] = None) -> AsyncGenerator[str, None]:
         """
-        Process a user question through the multi-agent graph.
+        Process a user question with model routing and yield tokens for streaming.
         """
-        # Convert Pydantic history to dict format for the graph if necessary
         formatted_history = []
         if history:
             for msg in history:
@@ -23,17 +26,31 @@ class ChatService:
             "github_data": [],
             "agent_sources": [],
             "intent": "general",
-            "response": ""
+            "response": "",
+            "final_prompt": ""
         }
         
-        # Invoke the LangGraph workflow
-        # The result state will contain the final response and metadata
+        # 1. Run the graph to get the final prompt (context assembly)
         result = await agent_graph.ainvoke(initial_state)
+        final_prompt = result.get("final_prompt")
+        intent = result.get("intent", "general")
         
-        return {
-            "response": result.get("response", "Erreur : aucune réponse générée."),
-            "intent": result.get("intent", "unknown"),
-            "sources": result.get("agent_sources", [])
-        }
+        if not final_prompt:
+            yield "Erreur : impossible de générer le prompt."
+            return
+
+        # 2. Model Routing
+        # Use Llama 1B for general questions, DeepSeek-R1 for actual CV analysis
+        if intent == "general":
+            llm = get_fast_llm()
+            logger.info("Routing to Fast LLM (Llama 1B) for general intent")
+        else:
+            llm = get_llm()
+            logger.info(f"Routing to Reasoning LLM (DeepSeek-R1) for {intent} intent")
+
+        # 3. Stream the LLM response
+        async for chunk in llm.astream(final_prompt):
+            if chunk.content:
+                yield chunk.content
 
 chat_service = ChatService()

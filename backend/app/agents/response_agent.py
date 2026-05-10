@@ -41,7 +41,10 @@ RÈGLES :
 """
 
 
-def response_agent(state):
+from backend.app.core.monitoring import profile_async
+
+@profile_async("Response Agent (Prompt Build)")
+async def response_agent(state):
     """
     Génère une réponse en tant qu'Amaury Rammanat.
     """

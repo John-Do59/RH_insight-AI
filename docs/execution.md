@@ -4,46 +4,51 @@ Ce document détaille les commandes nécessaires pour initialiser, configurer et
 
 ## 1. Préparation de l'Environnement
 
-### Installation des dépendances
+### Installation des dépendances Backend
 ```bash
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 ```
 
+### Installation des dépendances Frontend
+```bash
+cd frontend/vue-app
+npm install
+```
+
 ### Configuration des variables d'environnement
 ```bash
 cp .env.example .env
-# Éditez le fichier .env avec vos clés (GitHub, etc.)
+# Éditez le fichier .env avec vos clés (GITHUB_TOKEN, SECRET_KEY, etc.)
 ```
 
 ## 2. Initialisation des Données
 
-Avant de lancer l'application, les bases de données doivent être préparées.
-
-### Base de données SQL (SQLite)
-Initialise la structure et insère des données de test pour les candidats.
+### Base de données SQL (Alembic)
 ```bash
-python scripts/init_db.py
+alembic upgrade head
 python scripts/seed_db.py
 ```
 
 ### Base de données Vectorielle (Chroma)
-Indexe les fichiers PDF présents dans le dossier `data/cv/`.
 ```bash
 python scripts/ingest_cv.py
 ```
 
 ## 3. Lancement de l'Application
 
-### Via Streamlit (Recommandé)
+### Backend (FastAPI)
 ```bash
-streamlit run app/streamlit_app.py
+# Depuis la racine
+source venv/bin/activate
+uvicorn backend.app.main:app --reload
 ```
 
-### Via le script d'automatisation
+### Frontend (Vue.js)
 ```bash
-bash run.sh
+cd frontend/vue-app
+npm run dev
 ```
 
 ## 4. Tests et Maintenance
@@ -53,8 +58,9 @@ bash run.sh
 pytest tests/
 ```
 
-### Vérification de l'indexation
-Vous pouvez vérifier le nombre de documents indexés dans Chroma :
-```bash
-python scripts/check_vector_store.py
-```
+### Profiling et Performance (Étape 5)
+L'application enregistre désormais les temps de latence dans les logs :
+- Intent Agent Detection
+- SQL Execution (Async)
+- RAG Retrieval (Async)
+- LLM Streaming (DeepSeek-R1 vs Llama 1B)

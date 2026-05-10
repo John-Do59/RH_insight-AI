@@ -4,53 +4,62 @@ Ce document décrit l'architecture technique et le flux de données de la platef
 
 ## 1. Vue d'Ensemble
 
-RH Insight AI est une application basée sur une architecture **Multi-Agents** orchestrée par **LangGraph**. Elle permet de traiter des requêtes complexes en combinant plusieurs sources de données :
-- **SQL** : Données structurées des candidats (SQLite).
-- **RAG** : Données textuelles extraites des CV (ChromaDB + PDF).
-- **GitHub** : Données techniques en temps réel via l'API GitHub.
+RH Insight AI est une application basée sur une architecture **Multi-Agents** orchestrée par **LangGraph**, optimisée pour la performance et la latence (Étape 5).
 
-## 2. Orchestration (LangGraph)
+### Points clés de l'architecture moderne :
+- **Backend Asynchrone** : Utilisation intensive de `FastAPI`, `httpx`, `aiosqlite` et `ainvoke`.
+- **Streaming de Tokens** : Réponse en temps réel via `StreamingResponse` pour une expérience premium.
+- **Model Routing** : Sélection dynamique du modèle LLM en fonction de la complexité de la tâche.
 
-Le flux de décision est géré par un graphe d'états qui route la requête utilisateur vers l'agent approprié.
+## 2. Orchestration et Flux (LangGraph)
 
-### Diagramme de Flux
+Le flux de décision est géré par un graphe d'états asynchrone qui assemble le contexte avant la génération finale.
+
+### Diagramme de Flux (Phase d'Inférence)
 ```mermaid
 graph TD
-    User([Utilisateur]) --> Intent[Agent d'Intention]
+    User([Utilisateur]) --> API[FastAPI Endpoint]
+    API --> Graph[LangGraph Execution]
+    
+    subgraph "LangGraph (Async)"
+    Graph --> Intent[Agent d'Intention]
     Intent --> Router{Router}
-    
-    Router -- "Requête CV" --> RAG[Agent RAG]
-    Router -- "Requête Statistique" --> SQL[Agent SQL]
-    Router -- "Requête Technique" --> GitHub[Agent GitHub]
-    Router -- "Question Générale" --> Response[Agent de Réponse]
-    
-    RAG --> Response
+    Router -- "CV" --> RAG[Agent RAG]
+    Router -- "Stats" --> SQL[Agent SQL]
+    Router -- "Tech" --> GitHub[Agent GitHub]
+    RAG --> Response[Response Agent]
     SQL --> Response
     GitHub --> Response
+    Response --> Assembly[Prompt Assembly]
+    end
     
-    Response --> End([Réponse Finale])
+    Assembly --> LLM_Route{Model Router}
+    LLM_Route -- "Simple" --> Llama[Llama 3.2 1B]
+    LLM_Route -- "Complex" --> DeepSeek[DeepSeek-R1]
+    
+    Llama --> Stream[Token Stream]
+    DeepSeek --> Stream
+    Stream --> User
 ```
 
 ## 3. Composants Techniques
 
-### Frontend (Vue.js)
-- Application Single Page (SPA) multipages : Onboarding, Authentification, Dashboard.
-- Framework : Vue.js 3 + Vite + Vue Router.
-- State Management : Pinia.
-- Design System : "AI Premium Workspace" (TailwindCSS v4, Dark Navy, Cobalt Blue, Glassmorphism).
+### Frontend (Vue.js 3)
+- **Architecture** : Vue 3 (Composition API) + Pinia + Vue Router.
+- **Communication** : API Fetch pour le support natif du streaming de tokens.
+- **Sécurité** : JWT stocké dans le state manager avec intercepteurs Axios (pour les appels hors chat).
 
-### Backend (FastAPI / Modules)
-- **app/agents** : Logique métier de chaque agent spécialisé.
-- **app/rag** : Gestion de l'indexation et de la recherche vectorielle.
-- **app/llm** : Client Ollama pour l'interaction avec les modèles locaux.
-- **app/sql** : Gestion des interactions avec la base SQLite.
+### Backend (FastAPI Modulaire)
+- **Core** : `monitoring.py` pour le profiling de la latence de chaque composant.
+- **Agents** : Entièrement refactorisés en `async` pour éviter tout blocage de l'Event Loop.
+- **SQL** : `SQLAlchemy 2.0` avec moteur asynchrone `aiosqlite`.
+- **RAG** : Recherche vectorielle Chroma optimisée par cache LRU pour les embeddings.
 
-### Stockage
-- **ChromaDB** : Base de données vectorielle pour le stockage des embeddings de CV.
-- **SQLite** : Base de données relationnelle pour les métadonnées candidats.
+## 4. Stratégie de Latence (Étape 5)
 
-## 4. Modèles de Langage (LLMs)
-
-Le projet utilise actuellement des modèles locaux via **Ollama** :
-- **DeepSeek-R1 (7B)** : Utilisé pour le raisonnement complexe et la génération finale.
-- **Llama 3.2 (1B)** : Utilisé pour des tâches rapides comme la classification d'intention ou la génération de requêtes SQL.
+| Composant | Optimisation | Impact |
+| :--- | :--- | :--- |
+| LLM | Model Routing (Llama vs DeepSeek) | -50% latence sur questions simples |
+| I/O | Async complet (SQL, GitHub, RAG) | Fluidité totale de l'Event Loop |
+| UX | Streaming de Tokens | Perception de réponse instantanée |
+| Data | Cache LRU (Embeddings) | -300ms par recherche RAG |

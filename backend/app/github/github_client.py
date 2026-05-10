@@ -1,7 +1,5 @@
 """
-GitHub API Client — Récupération des données projets.
-
-Encapsule les appels à l'API GitHub avec gestion du cache et des erreurs.
+GitHub API Client — Récupération des données projets (Asynchrone).
 """
 
 import httpx
@@ -10,10 +8,11 @@ from cachetools import TTLCache
 from typing import List, Dict, Any, Optional
 from backend.app.config.settings import GITHUB_TOKEN, GITHUB_USERNAME
 from backend.app.utils.logger import logger
+from backend.app.core.monitoring import profile_async
 
 class GitHubClient:
     """
-    Client pour l'API GitHub (version synchrone).
+    Client pour l'API GitHub (version asynchrone).
     Utilise un cache TTL pour éviter les appels excessifs.
     """
     
@@ -34,11 +33,11 @@ class GitHubClient:
         else:
             logger.warning("GitHub Client: No GITHUB_TOKEN provided. Rate limits will be restricted (60/h).")
 
-    def get_all_repos(self, username: str = GITHUB_USERNAME) -> List[Dict[str, Any]]:
+    @profile_async("GitHub API Fetch")
+    async def get_all_repos(self, username: str = GITHUB_USERNAME) -> List[Dict[str, Any]]:
         """
         Récupère la liste des repositories (publics et privés si token présent).
         """
-        # Si token présent, on utilise /user/repos pour inclure les privés
         key_suffix = "auth" if GITHUB_TOKEN else "public"
         cache_key = f"repos_{username}_{key_suffix}"
         
@@ -46,7 +45,6 @@ class GitHubClient:
             logger.debug(f"GitHub Client: Cache hit for repos of {username}")
             return self.cache[cache_key]
         
-        # Endpoint différent selon l'auth
         if GITHUB_TOKEN:
             url = f"{self.BASE_URL}/user/repos"
             params = {"sort": "updated", "per_page": 100, "visibility": "all"}
@@ -55,14 +53,13 @@ class GitHubClient:
             params = {"sort": "updated", "per_page": 100, "type": "public"}
         
         try:
-            with httpx.Client() as client:
-                response = client.get(url, headers=self.headers, params=params, timeout=10.0)
+            async with httpx.AsyncClient() as client:
+                response = await client.get(url, headers=self.headers, params=params, timeout=10.0)
                 response.raise_for_status()
                 repos = response.json()
                 
                 processed_repos = []
                 for r in repos:
-                    # On ignore les forks pour ne garder que les projets originaux
                     if not r.get("fork"):
                         processed_repos.append({
                             "name": r.get("name"),
@@ -87,4 +84,3 @@ class GitHubClient:
 
 # Singleton
 github_client = GitHubClient()
-

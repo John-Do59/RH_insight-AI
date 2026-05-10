@@ -4,7 +4,10 @@ from backend.app.llm.ollama_client import get_fast_llm
 from backend.app.config.constants import INTENT_RAG, INTENT_SQL, INTENT_GENERAL, INTENT_GITHUB
 from backend.app.utils.logger import logger
 
-def classify_intent(state):
+from backend.app.core.monitoring import profile_async
+
+@profile_async("Intent Agent")
+async def classify_intent(state):
     """
     Classifies the user question into 'rag', 'sql', or 'general'.
     """
@@ -18,7 +21,7 @@ def classify_intent(state):
     INTENT:"""
     
     try:
-        response = llm.invoke(prompt)
+        response = await llm.ainvoke(prompt)
         content = response.content
         
         # Clean DeepSeek R1 output

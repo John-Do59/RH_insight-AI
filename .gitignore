@@ -34,3 +34,4 @@ dist-ssr/
 *.log
 logs/
 test.db
+rh_insight.db

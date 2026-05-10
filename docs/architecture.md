@@ -9,7 +9,7 @@ RH Insight AI est une application basée sur une architecture **Multi-Agents** o
 ## 4. Modèles de Langage (LLMs)
 
 Le projet utilise une stratégie hybride via **Ollama** pour maximiser la performance sur puce Apple Silicon (M4 Pro) :
-- **Qwen 3 (4B-Instruct)** : Modèle principal (Standard). Utilisé pour l'intention, le SQL, la synthèse RAG et les réponses standards. Offre un compromis idéal vitesse (30-60 tok/sec) / précision.
+- **Qwen 3.5 (4B)** : Modèle principal (Standard). Utilisé pour l'intention, le SQL, la synthèse RAG et les réponses standards. Offre un compromis idéal vitesse (30-60 tok/sec) / précision.
 - **DeepSeek-R1 (7B)** : Modèle de raisonnement (Reasoning). Utilisé uniquement pour les requêtes hybrides ou complexes nécessitant une analyse approfondie.
 
 ### Points clés de l'architecture moderne :

@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: rh-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-rh_insight}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - rh-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: rh-redis
+    restart: always
+    networks:
+      - rh-network
+
+  ollama:
+    image: ollama/ollama
+    container_name: rh-ollama
+    restart: always
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - rh-network
+    # Pour support GPU (NVIDIA), décommenter :
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: rh-backend
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    env_file:
+      - .env
+    environment:
+      POSTGRES_SERVER: db
+      OLLAMA_BASE_URL: http://ollama:11434
+    networks:
+      - rh-network
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: rh-frontend
+    depends_on:
+      - backend
+    networks:
+      - rh-network
+    ports:
+      - "80:80"
+
+networks:
+  rh-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  ollama_data:

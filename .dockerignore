@@ -1,0 +1,12 @@
+**/.git
+**/.vscode
+**/__pycache__
+**/.pytest_cache
+**/.env
+**/node_modules
+**/dist
+backend/tests
+rh_insight.db
+test.db
+data/
+*.pdf

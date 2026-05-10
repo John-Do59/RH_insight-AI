@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Text
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from backend.app.db.session import Base
+from backend.app.database.session import Base
 
 class Candidate(Base):
     __tablename__ = "candidates"

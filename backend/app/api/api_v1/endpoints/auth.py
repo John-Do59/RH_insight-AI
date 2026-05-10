@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from backend.app.config import settings
 from backend.app.core.security import verify_password, get_password_hash, create_access_token
-from backend.app.db.session import get_db
+from backend.app.database.session import get_db
 from backend.app.models.user import User
 from backend.app.schemas.user import UserCreate, UserResponse, Token
 from backend.app.api.deps import get_current_user

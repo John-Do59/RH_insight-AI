@@ -23,9 +23,22 @@ cp .env.example .env
 # Éditez le fichier .env avec vos clés (GITHUB_TOKEN, SECRET_KEY, etc.)
 ```
 
-## 2. Initialisation des Données
+## 2. Infrastructure et Services
 
-### Base de données SQL (Alembic)
+### Ollama (LLM)
+Assurez-vous qu'Ollama est lancé et que les modèles sont téléchargés :
+```bash
+ollama pull deepseek-r1:7b
+ollama pull qwen3.5:4b
+```
+
+### PostgreSQL (Database)
+Le projet utilise désormais **PostgreSQL**. Pour lancer une instance locale rapidement :
+```bash
+docker run --name rh-postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=rh_insight -p 5432:5432 -d postgres
+```
+
+## 3. Initialisation des Données
 ```bash
 alembic upgrade head
 python scripts/seed_db.py

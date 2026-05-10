@@ -1,8 +1,8 @@
 import json
 import re
-from app.llm.ollama_client import get_fast_llm
-from app.config.constants import INTENT_RAG, INTENT_SQL, INTENT_GENERAL, INTENT_GITHUB
-from app.utils.logger import logger
+from backend.app.llm.ollama_client import get_fast_llm
+from backend.app.config.constants import INTENT_RAG, INTENT_SQL, INTENT_GENERAL, INTENT_GITHUB
+from backend.app.utils.logger import logger
 
 def classify_intent(state):
     """

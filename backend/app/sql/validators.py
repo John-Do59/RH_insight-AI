@@ -6,7 +6,7 @@ Whitelist de tables/colonnes, blocage de mots-clés dangereux.
 """
 
 import re
-from app.utils.logger import logger
+from backend.app.utils.logger import logger
 
 
 # Tables autorisées et leurs colonnes

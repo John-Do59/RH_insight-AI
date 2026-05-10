@@ -1,6 +1,6 @@
 import re
-from app.llm.ollama_client import get_llm
-from app.utils.logger import logger
+from backend.app.llm.ollama_client import get_llm
+from backend.app.utils.logger import logger
 
 # VOS INFORMATIONS PERSONNELLES
 PERSONAL_INFO = """

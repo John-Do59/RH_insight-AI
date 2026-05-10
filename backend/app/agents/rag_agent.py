@@ -1,5 +1,5 @@
-from app.rag.vector_store import get_vector_store
-from app.utils.logger import logger
+from backend.app.rag.vector_store import get_vector_store
+from backend.app.utils.logger import logger
 
 def rag_agent(state):
     """

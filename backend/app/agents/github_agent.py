@@ -2,8 +2,8 @@
 GitHub Agent — Interroge GitHub pour obtenir des données sur les projets.
 """
 
-from app.github.github_client import github_client
-from app.utils.logger import logger
+from backend.app.github.github_client import github_client
+from backend.app.utils.logger import logger
 
 def github_agent(state: dict) -> dict:
     """

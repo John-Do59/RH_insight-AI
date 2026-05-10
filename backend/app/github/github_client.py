@@ -8,8 +8,8 @@ import httpx
 from datetime import datetime, timedelta
 from cachetools import TTLCache
 from typing import List, Dict, Any, Optional
-from app.config.settings import GITHUB_TOKEN, GITHUB_USERNAME
-from app.utils.logger import logger
+from backend.app.config.settings import GITHUB_TOKEN, GITHUB_USERNAME
+from backend.app.utils.logger import logger
 
 class GitHubClient:
     """

@@ -1,8 +1,8 @@
 import json
 import re
 from langchain_core.prompts import PromptTemplate
-from app.llm.ollama_client import get_llm
-from app.utils.logger import logger
+from backend.app.llm.ollama_client import get_llm
+from backend.app.utils.logger import logger
 
 def extract_structured_data(text: str):
     """

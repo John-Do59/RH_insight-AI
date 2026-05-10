@@ -1,9 +1,9 @@
 import re
 from sqlalchemy import text
-from app.llm.ollama_client import get_fast_llm
-from app.sql.database import get_engine
-from app.sql.validators import validate_sql_query, SQLValidationError
-from app.utils.logger import logger
+from backend.app.llm.ollama_client import get_fast_llm
+from backend.app.sql.database import get_engine
+from backend.app.sql.validators import validate_sql_query, SQLValidationError
+from backend.app.utils.logger import logger
 
 # SCHEMA ADAPTÉ AU CV
 SCHEMA_INFO = """

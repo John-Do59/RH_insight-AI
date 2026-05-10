@@ -1,5 +1,5 @@
 from pypdf import PdfReader
-from app.utils.logger import logger
+from backend.app.utils.logger import logger
 
 def extract_text_from_pdf(pdf_path: str) -> str:
     """

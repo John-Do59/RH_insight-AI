@@ -1,6 +1,6 @@
 import os
 from sqlalchemy import create_engine
-from app.config.settings import SQL_DB_PATH
+from backend.app.config.settings import SQL_DB_PATH
 
 def get_engine():
     """

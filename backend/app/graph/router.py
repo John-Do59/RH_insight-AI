@@ -4,7 +4,7 @@ Router — Détection d'intention et routage vers les agents spécialisés.
 Extrait la logique de routage de graph.py pour une meilleure modularité.
 """
 
-from app.config.constants import INTENT_RAG, INTENT_SQL, INTENT_GITHUB
+from backend.app.config.constants import INTENT_RAG, INTENT_SQL, INTENT_GITHUB
 
 
 from typing import List, Union

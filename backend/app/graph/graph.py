@@ -1,11 +1,11 @@
 from langgraph.graph import StateGraph, END
-from app.graph.state import AgentState
-from app.graph.router import router
-from app.agents.intent_agent import classify_intent
-from app.agents.rag_agent import rag_agent
-from app.agents.sql_agent import sql_agent
-from app.agents.github_agent import github_agent
-from app.agents.response_agent import response_agent
+from backend.app.graph.state import AgentState
+from backend.app.graph.router import router
+from backend.app.agents.intent_agent import classify_intent
+from backend.app.agents.rag_agent import rag_agent
+from backend.app.agents.sql_agent import sql_agent
+from backend.app.agents.github_agent import github_agent
+from backend.app.agents.response_agent import response_agent
 
 
 def create_graph():

@@ -1,5 +1,5 @@
 from langchain_ollama import ChatOllama
-from app.config.settings import OLLAMA_BASE_URL, LLM_MODEL
+from backend.app.config.settings import OLLAMA_BASE_URL, LLM_MODEL
 
 _reasoning_llm = None
 _fast_llm = None

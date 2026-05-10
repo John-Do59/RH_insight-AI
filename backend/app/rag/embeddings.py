@@ -1,6 +1,6 @@
 from langchain_ollama import OllamaEmbeddings
 from langchain_huggingface import HuggingFaceEmbeddings
-from app.config.settings import EMBEDDING_MODEL, EMBEDDING_PROVIDER, OLLAMA_BASE_URL
+from backend.app.config.settings import EMBEDDING_MODEL, EMBEDDING_PROVIDER, OLLAMA_BASE_URL
 
 def get_embeddings():
     """

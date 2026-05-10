@@ -33,10 +33,11 @@ graph TD
 
 ## 3. Composants Techniques
 
-### Frontend (Streamlit)
-- Interface utilisateur interactive.
-- Personnalisation CSS pour un look premium.
-- Support audio (Text-to-Speech et Speech-to-Text).
+### Frontend (Vue.js)
+- Application Single Page (SPA) multipages : Onboarding, Authentification, Dashboard.
+- Framework : Vue.js 3 + Vite + Vue Router.
+- State Management : Pinia.
+- Design System : "AI Premium Workspace" (TailwindCSS v4, Dark Navy, Cobalt Blue, Glassmorphism).
 
 ### Backend (FastAPI / Modules)
 - **app/agents** : Logique métier de chaque agent spécialisé.

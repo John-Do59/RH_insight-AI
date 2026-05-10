@@ -33,3 +33,4 @@ dist-ssr/
 # Logs
 *.log
 logs/
+test.db

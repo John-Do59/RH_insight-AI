@@ -1,0 +1,67 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #1D4ED8;
+  --color-primary-light: #2563EB;
+  --color-accent: #7C3AED;
+  --color-accent-light: #8B5CF6;
+  
+  --color-bg-dark: #0F172A;
+  --color-bg-darker: #111827;
+  --color-surface: #1E293B;
+  
+  --color-text-primary: #F8FAFC;
+  --color-text-secondary: #94A3B8;
+
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-heading: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+}
+
+@layer base {
+  :root {
+    --background: var(--color-bg-dark);
+    --foreground: var(--color-text-primary);
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer utilities {
+  .bg-gradient-premium {
+    background: linear-gradient(135deg, var(--color-primary-light), var(--color-accent));
+  }
+  
+  .text-gradient-premium {
+    background: linear-gradient(135deg, var(--color-primary-light), var(--color-accent-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .glass-card {
+    background-color: rgba(30, 41, 59, 0.7); /* Surface color with opacity */
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+
+  .glow-subtle {
+    box-shadow: 0 0 20px rgba(124, 58, 237, 0.15); /* Purple accent glow */
+  }
+  
+  .glow-blue {
+    box-shadow: 0 0 20px rgba(37, 99, 235, 0.15); /* Blue accent glow */
+  }
+}

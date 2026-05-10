@@ -21,6 +21,11 @@
         <p class="text-text-secondary text-sm">Connectez-vous pour accéder au Dashboard IA</p>
       </div>
 
+      <!-- Error Message -->
+      <div v-if="authStore.error" class="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm text-center">
+        {{ authStore.error }}
+      </div>
+
       <form @submit.prevent="handleLogin" class="space-y-6">
         <div class="space-y-2">
           <label class="text-sm font-medium text-text-secondary">Email</label>
@@ -44,9 +49,11 @@
         </div>
 
         <button type="submit" 
-                class="w-full py-3 px-4 bg-gradient-premium rounded-xl text-white font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2 glow-subtle">
-          Se connecter
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" x2="3" y1="12" y2="12"/></svg>
+                :disabled="authStore.loading"
+                class="w-full py-3 px-4 bg-gradient-premium rounded-xl text-white font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2 glow-subtle disabled:opacity-50 disabled:cursor-not-allowed">
+          <span v-if="authStore.loading" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+          <span v-else>Se connecter</span>
+          <svg v-if="!authStore.loading" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" x2="3" y1="12" y2="12"/></svg>
         </button>
       </form>
       
@@ -62,15 +69,18 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
 
 const router = useRouter()
+const authStore = useAuthStore()
+
 const email = ref('')
 const password = ref('')
 
-const handleLogin = () => {
-  // TODO: Call API for actual login
-  console.log('Logging in with', email.value)
-  // Mock login success
-  router.push('/dashboard')
+const handleLogin = async () => {
+  const success = await authStore.login(email.value, password.value)
+  if (success) {
+    router.push('/dashboard')
+  }
 }
 </script>

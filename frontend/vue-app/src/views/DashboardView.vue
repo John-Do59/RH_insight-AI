@@ -35,14 +35,15 @@
       
       <!-- User Profile -->
       <div class="p-4 border-t border-white/5">
-        <div class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5 cursor-pointer transition-colors">
-          <div class="w-8 h-8 rounded-full bg-surface border border-white/10 flex items-center justify-center text-sm font-medium">
-            JD
+        <div @click="handleLogout" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-red-500/10 cursor-pointer transition-colors group">
+          <div class="w-8 h-8 rounded-full bg-surface border border-white/10 flex items-center justify-center text-sm font-medium text-white group-hover:border-red-500/20">
+            {{ userInitials }}
           </div>
           <div class="flex-1 overflow-hidden">
-            <p class="text-sm font-medium text-white truncate">Jean Dupont</p>
-            <p class="text-xs text-text-secondary truncate">Admin</p>
+            <p class="text-sm font-medium text-white truncate group-hover:text-red-400">{{ userName }}</p>
+            <p class="text-xs text-text-secondary truncate">Déconnexion</p>
           </div>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-text-secondary group-hover:text-red-400"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
         </div>
       </div>
     </aside>
@@ -74,7 +75,7 @@
               <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-accent-light"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>
             </div>
           </div>
-          <h2 class="text-2xl font-bold mb-2">Comment puis-je vous aider ?</h2>
+          <h2 class="text-2xl font-bold mb-2">Comment puis-je vous aider, {{ userName }} ?</h2>
           <p class="text-text-secondary mb-8">Posez des questions sur les candidats, analysez des CVs, ou cherchez des profils GitHub spécifiques.</p>
           
           <div class="grid grid-cols-2 gap-4 w-full">
@@ -97,7 +98,7 @@
           <!-- Avatar -->
           <div class="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center"
                :class="msg.role === 'user' ? 'bg-surface border border-white/10' : 'bg-gradient-premium'">
-            <span v-if="msg.role === 'user'" class="text-xs font-medium">JD</span>
+            <span v-if="msg.role === 'user'" class="text-xs font-medium">{{ userInitials }}</span>
             <svg v-else xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>
           </div>
 
@@ -128,7 +129,7 @@
               <button type="submit" 
                       :disabled="!inputText.trim()"
                       class="p-2 bg-gradient-premium rounded-xl text-white hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed glow-subtle">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+                <svg xmlns="http://www.w3.org/2000/xl" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
               </button>
             </div>
           </form>
@@ -143,28 +144,42 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
+
+const router = useRouter()
+const authStore = useAuthStore()
 
 const inputText = ref('')
 const messages = ref([])
 
+const userName = computed(() => authStore.user?.full_name || 'Utilisateur')
+const userInitials = computed(() => {
+  const name = userName.value
+  return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)
+})
+
+const handleLogout = () => {
+  authStore.logout()
+  router.push('/auth')
+}
+
 const sendMessage = () => {
   if (!inputText.value.trim()) return
 
-  // Add user message
   messages.value.push({
     role: 'user',
     content: inputText.value
   })
 
-  const query = inputText.value
   inputText.value = ''
 
-  // Simulate AI Response (To be replaced with actual API call)
+  // TODO: Add actual API call with token
   setTimeout(() => {
     messages.value.push({
       role: 'assistant',
-      content: "Je suis connecté à la nouvelle interface. L'intégration de l'API FastAPI et de l'architecture async est en cours de développement."
+      content: "Connexion établie ! Le système d'authentification JWT est maintenant fonctionnel sur le Dashboard."
     })
   }, 1000)
 }

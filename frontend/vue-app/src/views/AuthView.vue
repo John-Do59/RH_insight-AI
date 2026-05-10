@@ -17,8 +17,8 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>
           </div>
         </div>
-        <h2 class="text-3xl font-bold text-white mb-2">Bon retour</h2>
-        <p class="text-text-secondary text-sm">Connectez-vous pour accéder au Dashboard IA</p>
+        <h2 class="text-3xl font-bold text-white mb-2">{{ isLogin ? 'Bon retour' : 'Rejoindre RH Insight' }}</h2>
+        <p class="text-text-secondary text-sm">{{ isLogin ? 'Connectez-vous pour accéder au Dashboard IA' : 'Créez un compte pour commencer l\'analyse de vos candidats' }}</p>
       </div>
 
       <!-- Error Message -->
@@ -26,7 +26,17 @@
         {{ authStore.error }}
       </div>
 
-      <form @submit.prevent="handleLogin" class="space-y-6">
+      <form @submit.prevent="handleSubmit" class="space-y-5">
+        <!-- Full Name (Only for Register) -->
+        <div v-if="!isLogin" class="space-y-2">
+          <label class="text-sm font-medium text-text-secondary">Nom complet</label>
+          <input type="text" 
+                 v-model="fullName"
+                 required
+                 class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-accent-light focus:ring-1 focus:ring-accent-light text-white transition-all placeholder:text-text-secondary/50"
+                 placeholder="Amaury Dupont">
+        </div>
+
         <div class="space-y-2">
           <label class="text-sm font-medium text-text-secondary">Email</label>
           <input type="email" 
@@ -39,7 +49,7 @@
         <div class="space-y-2">
           <div class="flex items-center justify-between">
             <label class="text-sm font-medium text-text-secondary">Mot de passe</label>
-            <a href="#" class="text-xs text-primary-light hover:text-white transition-colors">Mot de passe oublié ?</a>
+            <a v-if="isLogin" href="#" class="text-xs text-primary-light hover:text-white transition-colors">Mot de passe oublié ?</a>
           </div>
           <input type="password" 
                  v-model="password"
@@ -50,15 +60,22 @@
 
         <button type="submit" 
                 :disabled="authStore.loading"
-                class="w-full py-3 px-4 bg-gradient-premium rounded-xl text-white font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2 glow-subtle disabled:opacity-50 disabled:cursor-not-allowed">
+                class="w-full py-3 px-4 bg-gradient-premium rounded-xl text-white font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2 glow-subtle disabled:opacity-50 disabled:cursor-not-allowed mt-2">
           <span v-if="authStore.loading" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-          <span v-else>Se connecter</span>
+          <span v-else>{{ isLogin ? 'Se connecter' : 'Créer un compte' }}</span>
           <svg v-if="!authStore.loading" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" x2="3" y1="12" y2="12"/></svg>
         </button>
       </form>
       
-      <div class="mt-8 text-center">
-        <router-link to="/" class="text-sm text-text-secondary hover:text-white transition-colors">
+      <div class="mt-6 text-center space-y-4">
+        <p class="text-sm text-text-secondary">
+          {{ isLogin ? "Pas encore de compte ?" : "Déjà un compte ?" }}
+          <button @click="isLogin = !isLogin" class="text-primary-light hover:text-white font-medium transition-colors ml-1">
+            {{ isLogin ? "S'inscrire" : "Se connecter" }}
+          </button>
+        </p>
+        
+        <router-link to="/" class="block text-sm text-text-secondary hover:text-white transition-colors">
           &larr; Retour à la vitrine
         </router-link>
       </div>
@@ -74,11 +91,19 @@ import { useAuthStore } from '../stores/auth'
 const router = useRouter()
 const authStore = useAuthStore()
 
+const isLogin = ref(true)
 const email = ref('')
 const password = ref('')
+const fullName = ref('')
 
-const handleLogin = async () => {
-  const success = await authStore.login(email.value, password.value)
+const handleSubmit = async () => {
+  let success = false
+  if (isLogin.value) {
+    success = await authStore.login(email.value, password.value)
+  } else {
+    success = await authStore.register(email.value, password.value, fullName.value)
+  }
+  
   if (success) {
     router.push('/dashboard')
   }

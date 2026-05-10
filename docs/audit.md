@@ -1,47 +1,49 @@
-# Audit du Projet et Optimisation de la Latence
+# Audit Technique & Plan de Refactorisation
 
-## 1. État Actuel du Projet
+Ce document synthétise l'audit du projet **RH Insight AI** avant la phase de conteneurisation.
 
-### Points Forts
-- **Architecture Modulaire** : L'utilisation de LangGraph permet une séparation claire des responsabilités entre les agents.
-- **Interface Riche** : Streamlit est bien utilisé avec des fonctionnalités avancées (audio, CSS).
-- **Multi-Sources** : Capacité à croiser SQL, RAG et GitHub.
+## 🛡️ Audit de Sécurité
 
-### Points à Améliorer
-- **Latence Élevée** : Les réponses sur les CV sont lentes.
-- **Monolithe Streamlit** : Le fichier `streamlit_app.py` contient trop de logique métier qui devrait être déportée dans des modules.
-- **Gestion des Modèles** : L'utilisation systématique de modèles "Reasoning" (DeepSeek-R1) pour toutes les réponses ralentit l'expérience utilisateur.
+### 1. Failles Critiques
+- **CORS Permissif** : `allow_origins=["*"]` dans `main.py`. Doit être restreint en production.
+- **Secrets par défaut** : La `SECRET_KEY` est en dur dans le code (même avec un fallback `os.getenv`).
+- **SQL Injection** : Le validateur est présent mais rudimentaire. Une injection complexe pourrait passer si elle utilise des fonctions non listées.
 
-## 2. Analyse de la Latence
+### 2. Gestion des Identités
+- Pas de validation de force de mot de passe à l'inscription.
+- Pas de mécanisme de rafraîchissement de token (Refresh Token).
 
-La lenteur actuelle s'explique par plusieurs facteurs techniques :
+## 🏗️ Dette Technique & Duplication
 
-1.  **Modèle "Reasoning" (DeepSeek-R1)** : Ce modèle génère une "chaîne de pensée" (CoT) avant de répondre. Bien que performant pour le raisonnement, il est structurellement beaucoup plus lent qu'un modèle direct.
-2.  **Inférence Locale (Ollama)** : Sans un GPU puissant (Apple Silicon M2/M3 Max ou NVIDIA RTX), l'exécution locale de modèles 7B+ est limitée par la bande passante mémoire.
-3.  **Absence de Streaming** : L'interface attend que la réponse soit complète avant de l'afficher, donnant une impression de blocage.
+### 1. Structure de l'Arborescence
+- **Obsolescence** : `backend/app/core/config.py` est en doublon avec `backend/app/config/settings.py`.
+- **Incohérence** : Séparation entre `db/` et `sql/`. Devrait être unifié sous `database/` ou `db/`.
+- **Clients LLM** : `llm/ollama_client.py` crée plusieurs fonctions pour la même chose.
 
-## 3. Recommandations pour une Latence "Niveau Professionnel"
+### 2. Code Duplication
+- Logique d'initialisation de base de données répétée dans `sql/database.py` et `db/session.py`.
+- Templates de prompts éparpillés dans les agents sans centralisation.
 
-Pour atteindre une réactivité instantanée, voici les solutions préconisées par ordre de priorité :
+## 🧹 Plan de Nettoyage (Refactoring)
 
-### Solution A : Passer sur des APIs Cloud "Ultra-Fast" (Recommandé)
-L'utilisation de services comme **Groq** ou **Together AI** permet d'obtenir des vitesses d'inférence dépassant les 300 tokens/seconde (quasi instantané).
-- **Modèle conseillé** : `Llama 3.1 70B` ou `70B Versatile` sur Groq.
-- **Coût** : Très faible, voire gratuit (tier gratuit généreux).
+1.  **Suppression** :
+    - `backend/app/core/config.py` (Doublon)
+    - `backend/app/core/monitoring.py` (Si déplacé dans utils)
+2.  **Unification** :
+    - Fusionner `db/` et `sql/` dans un package unique `database/`.
+    - Centraliser les Prompts dans `backend/app/llm/prompts.py`.
+3.  **Sécurisation** :
+    - Mettre à jour `main.py` pour charger les domaines autorisés depuis `.env`.
+    - Ajouter une validation de mot de passe dans `auth.py`.
 
-### Solution B : Optimisation de l'Inférence Locale
-Si l'hébergement local est une contrainte :
-- **Changer de modèle** : Utiliser `Llama 3.2 3B` ou `Mistral Nemo` à la place de DeepSeek-R1 pour les réponses RAG simples.
-- **Quantification** : S'assurer d'utiliser des versions `q4_K_M` ou `q2` si la RAM est limitée.
+## 🧪 Plan de Tests
 
-### Solution C : Implémentation du Streaming
-Modifier le backend et l'interface Streamlit pour afficher les mots au fur et à mesure de leur génération. Cela réduit la "latence perçue" à presque zéro.
+### 1. Tests Unitaires (Pytest)
+- Validation SQL (Security tests).
+- Modèles Pydantic.
+- Utilitaires de parsing.
 
-### Solution D : Cache Sémantique
-Mettre en place un cache (ex: Redis) pour stocker les réponses aux questions fréquentes. Si une question similaire est posée, la réponse est renvoyée instantanément sans appel au LLM.
-
-## 4. Plan d'Action Proposé
-
-1.  **Phase 1** : Intégrer le support du streaming dans `app/agents/response_agent.py`.
-2.  **Phase 2** : Ajouter une option dans `.env` pour basculer vers un fournisseur cloud (Groq/OpenAI) pour les moments nécessitant une haute performance.
-3.  **Phase 3** : Refactoriser `streamlit_app.py` pour séparer la vue de la logique.
+### 2. Tests d'Intégration
+- Flow Auth : Register -> Login -> Me.
+- Chat Flow : Question -> Agents -> Response.
+- DB Migration : Vérifier que les modèles correspondent à PostgreSQL.

@@ -1,8 +1,8 @@
 import re
 from sqlalchemy import text
 from backend.app.llm.ollama_client import get_fast_llm
-from backend.app.sql.database import get_engine
-from backend.app.sql.validators import validate_sql_query, SQLValidationError
+from backend.app.database.engine import get_engine
+from backend.app.database.validators import validate_sql_query, SQLValidationError
 from backend.app.utils.logger import logger
 
 # SCHEMA ADAPTÉ AU CV
@@ -60,7 +60,7 @@ SQL: SELECT skill_name, level FROM skills WHERE LOWER(skill_name) LIKE '%ia%' OR
 
 
 from backend.app.core.monitoring import profile_async
-from backend.app.sql.database import get_async_engine
+from backend.app.database.engine import get_async_engine
 
 @profile_async("SQL Agent")
 async def sql_agent(state):

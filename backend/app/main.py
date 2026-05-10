@@ -3,6 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend.app.api.api_v1.api import api_router
 from backend.app.utils.logger import logger
 
+from backend.app.config.settings import BACKEND_CORS_ORIGINS
+
 app = FastAPI(
     title="RH Insight AI API",
     description="Backend API for RH Insight AI Platform",
@@ -12,7 +14,7 @@ app = FastAPI(
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # In production, restrict this to the frontend URL
+    allow_origins=BACKEND_CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

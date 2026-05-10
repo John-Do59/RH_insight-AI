@@ -6,6 +6,12 @@ Ce document décrit l'architecture technique et le flux de données de la platef
 
 RH Insight AI est une application basée sur une architecture **Multi-Agents** orchestrée par **LangGraph**, optimisée pour la performance et la latence (Étape 5).
 
+## 4. Modèles de Langage (LLMs)
+
+Le projet utilise une stratégie hybride via **Ollama** pour maximiser la performance sur puce Apple Silicon (M4 Pro) :
+- **Qwen 3 (4B-Instruct)** : Modèle principal (Standard). Utilisé pour l'intention, le SQL, la synthèse RAG et les réponses standards. Offre un compromis idéal vitesse (30-60 tok/sec) / précision.
+- **DeepSeek-R1 (7B)** : Modèle de raisonnement (Reasoning). Utilisé uniquement pour les requêtes hybrides ou complexes nécessitant une analyse approfondie.
+
 ### Points clés de l'architecture moderne :
 - **Backend Asynchrone** : Utilisation intensive de `FastAPI`, `httpx`, `aiosqlite` et `ainvoke`.
 - **Streaming de Tokens** : Réponse en temps réel via `StreamingResponse` pour une expérience premium.

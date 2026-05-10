@@ -40,13 +40,16 @@ class ChatService:
             return
 
         # 2. Model Routing
-        # Use Llama 1B for general questions, DeepSeek-R1 for actual CV analysis
-        if intent == "general":
-            llm = get_fast_llm()
-            logger.info("Routing to Fast LLM (Llama 1B) for general intent")
-        else:
+        # Use Qwen 3 (Fast LLM) for standard tasks, DeepSeek-R1 only for complex reasoning (hybrid)
+        complex_keywords = ["analyse", "pourquoi", "raisonne", "explique", "détail", "comparaison"]
+        needs_reasoning = intent == "hybrid" or any(kw in question.lower() for kw in complex_keywords)
+        
+        if needs_reasoning:
             llm = get_llm()
-            logger.info(f"Routing to Reasoning LLM (DeepSeek-R1) for {intent} intent")
+            logger.info(f"Routing to Reasoning LLM (DeepSeek-R1) for {intent} intent (Complex)")
+        else:
+            llm = get_fast_llm()
+            logger.info(f"Routing to Standard LLM (Qwen 3 4B) for {intent} intent")
 
         # 3. Stream the LLM response
         async for chunk in llm.astream(final_prompt):

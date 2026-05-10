@@ -5,7 +5,8 @@ load_dotenv()
 
 # LLM
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-LLM_MODEL = os.getenv("LLM_MODEL", "deepseek-r1:7b")
+LLM_MODEL_REASONING = os.getenv("LLM_MODEL_REASONING", "deepseek-r1:7b")
+LLM_MODEL_STANDARD = os.getenv("LLM_MODEL_STANDARD", "qwen3:4b-instruct-q4_K_M")
 
 # Embeddings
 EMBEDDING_PROVIDER = os.getenv("EMBEDDING_PROVIDER", "ollama")

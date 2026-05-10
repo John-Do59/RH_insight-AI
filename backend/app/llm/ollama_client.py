@@ -1,32 +1,31 @@
 from langchain_ollama import ChatOllama
-from backend.app.config.settings import OLLAMA_BASE_URL, LLM_MODEL
+from backend.app.config.settings import OLLAMA_BASE_URL, LLM_MODEL_REASONING, LLM_MODEL_STANDARD
 
 _reasoning_llm = None
-_fast_llm = None
+_standard_llm = None
 
 def get_llm():
     """
-    Returns the reasoning LLM (DeepSeek R1).
+    Returns the reasoning LLM (DeepSeek R1) for complex reasoning tasks.
     """
     global _reasoning_llm
     if _reasoning_llm is None:
         _reasoning_llm = ChatOllama(
             base_url=OLLAMA_BASE_URL,
-            model=LLM_MODEL,
+            model=LLM_MODEL_REASONING,
             temperature=0
         )
     return _reasoning_llm
 
 def get_fast_llm():
     """
-    Returns a fast, lightweight LLM (Llama 3.2 1B) for intent/SQL tasks.
+    Returns the standard/fast LLM (Qwen 3 4B Instruct) for standard tasks.
     """
-    global _fast_llm
-    if _fast_llm is None:
-        _fast_llm = ChatOllama(
+    global _standard_llm
+    if _standard_llm is None:
+        _standard_llm = ChatOllama(
             base_url=OLLAMA_BASE_URL,
-            model="llama3.2:1b",
+            model=LLM_MODEL_STANDARD,
             temperature=0
         )
-    return _fast_llm
-
+    return _standard_llm

@@ -4,7 +4,7 @@ Vérifie que le validateur bloque les injections et requêtes dangereuses.
 """
 
 import pytest
-from app.sql.validators import validate_sql_query, SQLValidationError
+from backend.app.sql.validators import validate_sql_query, SQLValidationError
 
 
 class TestValidQueries:

@@ -1,6 +1,6 @@
 import sqlite3
 import os
-from app.config.settings import SQL_DB_PATH
+from backend.app.config.settings import SQL_DB_PATH
 
 def seed_database():
     # Ensure directory exists

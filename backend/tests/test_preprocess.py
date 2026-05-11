@@ -4,7 +4,7 @@ Vérifie la reconstruction de texte avec espaces intercalés.
 """
 
 import pytest
-from app.utils.preprocess import clean_spaced_text
+from backend.app.utils.preprocess import clean_spaced_text
 
 
 class TestCleanSpacedText:

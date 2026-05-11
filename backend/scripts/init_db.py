@@ -1,6 +1,6 @@
-from app.sql.database import get_engine
+from backend.app.sql.database import get_engine
 from sqlalchemy import text
-from app.utils.logger import logger
+from backend.app.utils.logger import logger
 
 def init_db():
     engine = get_engine()

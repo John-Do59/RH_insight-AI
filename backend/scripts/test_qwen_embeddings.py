@@ -4,7 +4,7 @@ import os
 # Add project root to path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from app.rag.embeddings import get_embeddings
+from backend.app.rag.embeddings import get_embeddings
 from loguru import logger
 
 def test_qwen_embeddings():

@@ -4,7 +4,7 @@ import os
 # Add project root to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.graph.graph import app
+from backend.app.graph.graph import app
 
 def test_chat():
     questions = [

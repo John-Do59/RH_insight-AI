@@ -1,0 +1,5 @@
+[tool.pytest.ini_options]
+# Ajoute la racine du projet au PYTHONPATH pour que "from backend.app..." fonctionne
+pythonpath = ["."]
+testpaths = ["backend/tests"]
+asyncio_mode = "auto"

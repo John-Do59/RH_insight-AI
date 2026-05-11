@@ -26,22 +26,8 @@ services:
     networks:
       - rh-network
 
-  ollama:
-    image: ollama/ollama
-    container_name: rh-ollama
-    restart: always
-    volumes:
-      - ollama_data:/root/.ollama
-    networks:
-      - rh-network
-    # Pour support GPU (NVIDIA), décommenter :
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: 1
-    #           capabilities: [gpu]
+  # Ollama est géré nativement sur le Mac pour profiter du GPU M4 (Metal)
+  # Le backend y accède via host.docker.internal
 
   backend:
     build:
@@ -57,7 +43,13 @@ services:
       - .env
     environment:
       POSTGRES_SERVER: db
-      OLLAMA_BASE_URL: http://ollama:11434
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-rh_insight}
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - vector_store_data:/app/backend/data/vector_store
+      - ./backend:/app/backend
     networks:
       - rh-network
     ports:
@@ -81,4 +73,4 @@ networks:
 
 volumes:
   postgres_data:
-  ollama_data:
+  vector_store_data:

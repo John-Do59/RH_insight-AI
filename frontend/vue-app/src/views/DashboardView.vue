@@ -172,29 +172,36 @@ const handleSendMessage = async () => {
   inputText.value = ''
   isTyping.value = true
 
-  // Add an empty assistant message to fill with tokens
-  const messageIndex = messages.value.push({
-    role: 'assistant',
-    content: '',
-    sources: ['streaming...']
-  }) - 1
+  // We don't pre-add the assistant bubble — we add it on first token to avoid double-bubble
+  let messageIndex = -1
+  let firstToken = true
 
   try {
-    const history = messages.value.slice(0, -2) // Exclude current user msg and empty assistant msg
+    const history = messages.value.slice(0, -1) // Exclude current user msg
     
     await chatService.streamMessage(question, history, (token) => {
-      isTyping.value = false // Hide typing indicator once we start receiving tokens
+      if (firstToken) {
+        // Only NOW do we add the bubble and hide the typing indicator
+        isTyping.value = false
+        messageIndex = messages.value.push({
+          role: 'assistant',
+          content: '',
+          sources: []
+        }) - 1
+        firstToken = false
+      }
       messages.value[messageIndex].content += token
       nextTick(() => scrollToBottom())
     })
-    
-    // Finalize message (remove 'streaming...' tag)
-    messages.value[messageIndex].sources = ['finalized']
-    
+
   } catch (err) {
     console.error('Chat error:', err)
-    messages.value[messageIndex].content = "Désolé, une erreur est survenue lors de la communication avec le serveur."
-    messages.value[messageIndex].sources = ['error']
+    isTyping.value = false
+    messages.value.push({
+      role: 'assistant',
+      content: "Désolé, une erreur est survenue. Vérifiez que le modèle Ollama est bien téléchargé.",
+      sources: ['error']
+    })
   } finally {
     isTyping.value = false
     nextTick(() => scrollToBottom())

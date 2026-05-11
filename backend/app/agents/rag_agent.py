@@ -14,7 +14,7 @@ async def rag_agent(state):
     try:
         vector_store = get_vector_store()
         # Retrieve top 5 relevant chunks for better precision
-        docs = await vector_store.asimilarity_search(question, k=5)
+        docs = vector_store.similarity_search(question, k=5)
         doc_contents = [doc.page_content for doc in docs]
         
         return {

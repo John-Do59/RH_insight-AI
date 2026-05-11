@@ -116,20 +116,20 @@ def build_context(rag_docs: list, sql_data: list, github_data: list) -> str:
     
     if sql_data:
         parts.append("DONNÉES DU CV (Compétences/Faits) :")
-        for row in sql_data[:15]:
+        for row in sql_data[:5]:
             if isinstance(row, dict):
                 formatted = " | ".join([f"{k}: {v}" for k, v in row.items() if v])
                 parts.append(f"  • {formatted}")
     
     if rag_docs:
         parts.append("\nEXTRAITS DESCRIPTIFS DU CV :")
-        for i, doc in enumerate(rag_docs[:5], 1):
-            doc_clean = doc[:600] + "..." if len(doc) > 600 else doc
+        for i, doc in enumerate(rag_docs[:2], 1):
+            doc_clean = doc[:400] + "..." if len(doc) > 400 else doc
             parts.append(f"  [{i}] {doc_clean}")
 
     if github_data:
         parts.append("\nPROJETS GITHUB RÉCENTS (À CITER PAR LEURS NOMS) :")
-        for repo in github_data[:10]:
+        for repo in github_data[:3]:
             name = repo.get("name")
             desc = repo.get("description") or "Pas de description"
             lang = repo.get("language") or "N/A"

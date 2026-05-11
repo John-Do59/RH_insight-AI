@@ -13,7 +13,9 @@ def get_llm():
         _reasoning_llm = ChatOllama(
             base_url=OLLAMA_BASE_URL,
             model=LLM_MODEL_REASONING,
-            temperature=0
+            temperature=0,
+            num_predict=1000,
+            keep_alive="24h" # Garde le modèle en mémoire GPU
         )
     return _reasoning_llm
 
@@ -26,6 +28,9 @@ def get_fast_llm():
         _standard_llm = ChatOllama(
             base_url=OLLAMA_BASE_URL,
             model=LLM_MODEL_STANDARD,
-            temperature=0
+            temperature=0,
+            num_ctx=2048,
+            num_predict=256,
+            keep_alive="24h"
         )
     return _standard_llm

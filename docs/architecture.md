@@ -40,10 +40,10 @@ graph TD
     end
     
     Assembly --> LLM_Route{Model Router}
-    LLM_Route -- "Simple" --> Llama[Llama 3.2 1B]
+    LLM_Route -- "Simple" --> FastModel[Qwen 3.5 4B]
     LLM_Route -- "Complex" --> DeepSeek[DeepSeek-R1]
     
-    Llama --> Stream[Token Stream]
+    FastModel --> Stream[Token Stream]
     DeepSeek --> Stream
     Stream --> User
 ```
@@ -58,14 +58,14 @@ graph TD
 ### Backend (FastAPI Modulaire)
 - **Core** : `monitoring.py` pour le profiling de la latence de chaque composant.
 - **Agents** : Entièrement refactorisés en `async` pour éviter tout blocage de l'Event Loop.
-- **SQL** : `SQLAlchemy 2.0` avec moteur asynchrone `aiosqlite`.
+- **SQL** : `SQLAlchemy 2.0` avec moteur asynchrone `asyncpg` sur base de données **PostgreSQL**.
 - **RAG** : Recherche vectorielle Chroma optimisée par cache LRU pour les embeddings.
 
 ## 4. Stratégie de Latence (Étape 5)
 
 | Composant | Optimisation | Impact |
 | :--- | :--- | :--- |
-| LLM | Model Routing (Llama vs DeepSeek) | -50% latence sur questions simples |
+| LLM | Model Routing (Qwen vs DeepSeek) | -50% latence sur questions simples |
 | I/O | Async complet (SQL, GitHub, RAG) | Fluidité totale de l'Event Loop |
 | UX | Streaming de Tokens | Perception de réponse instantanée |
 | Data | Cache LRU (Embeddings) | -300ms par recherche RAG |

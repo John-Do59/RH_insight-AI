@@ -14,8 +14,8 @@ RH Insight AI est un assistant conçu pour faciliter le travail des recruteurs e
 - **Requêtes de données (SQL)** : Analyse statistique et recherche de critères précis dans la base de données des candidats.
 - **Agent GitHub** : Récupération et analyse en temps réel des dépôts (publics et privés), langages et descriptions de projets.
 - **Orchestration Multi-Agents** : Utilisation de LangGraph pour router les questions vers l'agent le plus pertinent avec un flux hybride séquentiel (SQL -> RAG -> GitHub).
-- **Interface Premium** : Design "Purple Theme" moderne avec badges de sources et effets de flou (glassmorphism).
-- **Interaction vocale** : Support de la synthèse vocale masculine française haute qualité (`edge-tts`) et de la reconnaissance vocale.
+- **Interface Premium** : Design Vue.js 3 moderne avec Tailwind/CSS natif, animations fluides et terminal interactif.
+- **Support Docker** : Architecture entièrement conteneurisée pour un déploiement "plug and play".
 
 ## Architecture Technique
 
@@ -25,18 +25,25 @@ Le projet repose sur une architecture multi-agents moderne :
 - **Framework IA** : LangChain et LangGraph
 - **Modèles de langage** : DeepSeek R1 (via Ollama)
 - **Base de données Vectorielle** : Chroma (Vector Database)
-- **Base de données Relationnelle** : SQLite avec validation SQL security
+- **Base de données Relationnelle** : PostgreSQL avec validation SQLAlchemy/Pydantic
 - **API Externes** : GitHub REST API avec caching
-- **Frontend** : Streamlit avec personnalisation CSS avancée
+- **Frontend** : Vue.js 3 avec Composition API et Pinia
+- **Orchestration** : Docker et Docker Compose
 
-## Guide d'Installation
+## 🛠️ Installation et Démarrage
 
-### Prérequis
+### Choix de l'Environnement (Local vs Docker)
+Le projet est conçu pour fonctionner de deux manières sans conflit de configuration :
 
-- Python 3.10 ou supérieur
-- Ollama (configuré avec le modèle deepseek-r1)
+1. **Docker (Recommandé - Production)** : Lance une base de données **PostgreSQL**.
+2. **Local (Développement Rapide)** : Utilise automatiquement une base de données **SQLite** via `.env`.
 
-### Mise en place de l'environnement
+### ⚡ Optimisations Ollama (Mac 16Go)
+Pour éviter la saturation de la mémoire unifiée (RAM/Swap) et garantir un streaming instantané (TTFT < 1s) :
+- Les appels à `qwen3.5:4b` ont le mode *Thinking* désactivé (`think: False`) pour préserver les tokens.
+- Le contexte LLM est optimisé (`num_ctx: 2048`, `num_predict: 512`) pour éviter de dépasser la mémoire disponible du GPU.
+
+### Démarrage Rapide (avec Docker) (Recommandé)
 
 1. **Cloner le projet**
 
@@ -45,48 +52,34 @@ Le projet repose sur une architecture multi-agents moderne :
    cd RH_insight-AI
    ```
 
-2. **Créer l'environnement virtuel**
-
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate
-   ```
-
-3. **Installer les dépendances**
-
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Configuration**
+2. **Configuration**
 
    ```bash
    cp .env.example .env
-   # Modifiez le fichier .env pour y ajouter vos clés API si nécessaire
+   # Modifiez le fichier .env (Les modèles Ollama par défaut sont qwen3.5:4b et nomic-embed-text)
    ```
 
-### Initialisation des données
+3. **Lancer l'application**
 
-Pour que l'assistant soit opérationnel, vous devez initialiser les bases de données :
+   ```bash
+   docker compose up -d
+   ```
 
-```bash
-# Initialiser la base SQL et insérer des données de test
-python scripts/init_db.py
-python scripts/seed_db.py
+4. **Initialiser les données (PostgreSQL & ChromaDB)**
 
-# Indexer les CV PDF dans la base vectorielle
-python scripts/ingest_cv.py
-```
+   Une fois les conteneurs lancés, initialisez la base de données et ingérez les CV :
+   ```bash
+   docker exec rh-backend alembic upgrade head
+   docker exec rh-backend python3 scripts/ingest_cv.py
+   ```
 
-## Lancement de l'Application
+L'application est maintenant accessible sur `http://localhost:5173`.
+L'API Swagger est disponible sur `http://localhost:8000/docs`.
 
-Lancer le serveur de développement Streamlit :
+## Documentation détaillée
 
-```bash
-streamlit run app/streamlit_app.py
-```
-
-Le script `run.sh` est également disponible pour automatiser le lancement dans certains environnements.
+- [Architecture détaillée](docs/architecture.md)
+- [Commandes utiles](docs/commandes_utiles.md)
 
 ## Auteur
 

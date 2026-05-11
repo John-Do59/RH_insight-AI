@@ -11,7 +11,20 @@ Le pipeline CI est géré par **GitHub Actions** et se déclenche automatiquemen
 
 **Fichier de configuration :** `.github/workflows/ci.yml`
 
-## 2. Étapes du Pipeline CI
+## 2. Configuration pytest (`pyproject.toml`)
+
+Le projet utilise un `pyproject.toml` à la racine pour configurer pytest. Ce fichier est **essentiel pour la CI** car il résout l'erreur `ModuleNotFoundError: No module named 'backend'` sur GitHub Actions.
+
+```toml
+[tool.pytest.ini_options]
+pythonpath = ["."]       # Ajoute la racine au PYTHONPATH → "from backend.app..." fonctionne
+testpaths = ["backend/tests"]
+asyncio_mode = "auto"
+```
+
+> **Pourquoi ?** GitHub Actions exécute pytest depuis la racine du repo. Sans `pythonpath = ["."]`, Python ne sait pas que `backend/` est un package importable.
+
+## 3. Étapes du Pipeline CI
 
 ```
 push/PR → [1. Checkout] → [2. Setup Python] → [3. Install Deps]

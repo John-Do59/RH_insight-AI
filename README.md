@@ -1,86 +1,120 @@
-# RH Insight AI - Assistant de Recrutement Intelligent
+# RH Insight AI — Assistant de Recrutement Intelligent
 
-![RH Insight AI Cover](app/assets/cover.png)
+Plateforme RAG multi-agents pour l'analyse de CV et l'assistance au recrutement, propulsée par des LLMs locaux via Ollama.
 
-Plateforme d'analyse et d'interaction avec les données de recrutement utilisant l'intelligence artificielle générative. Ce projet combine le traitement de documents (RAG), les requêtes structurées (SQL) et l'analyse de projets open-source (GitHub) pour offrir une vue complète sur un profil de candidat.
+## Fonctionnalités
 
-## Présentation du Projet
+- **Chat RAG** : Interrogez les CV en langage naturel (recherche sémantique via ChromaDB)
+- **Agent SQL** : Requêtes structurées sur la base de données des candidats
+- **Agent GitHub** : Analyse de l'activité open-source des candidats
+- **Multi-Agents** : Orchestration LangGraph avec routage intelligent selon l'intention
+- **Streaming** : Réponses en temps réel token par token
+- **Auth sécurisée** : JWT + Rate Limiting anti-brute force
 
-RH Insight AI est un assistant conçu pour faciliter le travail des recruteurs et des gestionnaires de talents. Il permet d'interroger à la fois le contenu textuel des CV (expériences, compétences, formations) et les données structurées (statuts, dates, informations de contact) ainsi que l'activité technique sur GitHub à travers une interface naturelle et fluide.
+## Stack Technique
 
-### Fonctionnalités Clés
+| Couche | Technologie |
+|---|---|
+| Backend API | FastAPI + Python 3.11 |
+| IA / LLM | Ollama (`qwen3.5:4b`, `nomic-embed-text`) |
+| Orchestration | LangChain + LangGraph |
+| Vector Store | ChromaDB |
+| Base de données | PostgreSQL (prod) / SQLite (dev local) |
+| Frontend | Vue.js 3 + Composition API |
+| Auth | OAuth2 + JWT (bcrypt) |
+| Sécurité | slowapi (Rate Limiting) |
+| CI | GitHub Actions |
+| Conteneurs | Docker + Docker Compose |
 
-- **Analyse de documents (RAG)** : Recherche sémantique et extraction d'informations directement depuis les fichiers PDF des CV.
-- **Requêtes de données (SQL)** : Analyse statistique et recherche de critères précis dans la base de données des candidats.
-- **Agent GitHub** : Récupération et analyse en temps réel des dépôts (publics et privés), langages et descriptions de projets.
-- **Orchestration Multi-Agents** : Utilisation de LangGraph pour router les questions vers l'agent le plus pertinent avec un flux hybride séquentiel (SQL -> RAG -> GitHub).
-- **Interface Premium** : Design Vue.js 3 moderne avec Tailwind/CSS natif, animations fluides et terminal interactif.
-- **Support Docker** : Architecture entièrement conteneurisée pour un déploiement "plug and play".
+## Démarrage Rapide
 
-## Architecture Technique
+### Prérequis
 
-Le projet repose sur une architecture multi-agents moderne :
+- [Ollama](https://ollama.com) installé avec les modèles téléchargés :
+  ```bash
+  ollama pull qwen3.5:4b
+  ollama pull nomic-embed-text
+  ```
+- Docker & Docker Compose (pour le mode production)
+- Python 3.11+ et Node.js 18+ (pour le mode local)
 
-- **Moteur d'exécution** : Python 3.13+
-- **Framework IA** : LangChain et LangGraph
-- **Modèles de langage** : DeepSeek R1 (via Ollama)
-- **Base de données Vectorielle** : Chroma (Vector Database)
-- **Base de données Relationnelle** : PostgreSQL avec validation SQLAlchemy/Pydantic
-- **API Externes** : GitHub REST API avec caching
-- **Frontend** : Vue.js 3 avec Composition API et Pinia
-- **Orchestration** : Docker et Docker Compose
+### Mode Local (Développement)
 
-## 🛠️ Installation et Démarrage
+```bash
+# 1. Cloner et configurer
+git clone https://github.com/John-Do59/RH_insight-AI.git
+cd RH_insight-AI
+cp .env.example .env   # Éditer .env avec vos valeurs
 
-### Choix de l'Environnement (Local vs Docker)
-Le projet est conçu pour fonctionner de deux manières sans conflit de configuration :
+# 2. Backend
+python -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000
 
-1. **Docker (Recommandé - Production)** : Lance une base de données **PostgreSQL**.
-2. **Local (Développement Rapide)** : Utilise automatiquement une base de données **SQLite** via `.env`.
+# 3. Frontend (dans un autre terminal)
+cd frontend/vue-app
+npm install && npm run dev
+```
 
-### ⚡ Optimisations Ollama (Mac 16Go)
-Pour éviter la saturation de la mémoire unifiée (RAM/Swap) et garantir un streaming instantané (TTFT < 1s) :
-- Les appels à `qwen3.5:4b` ont le mode *Thinking* désactivé (`think: False`) pour préserver les tokens.
-- Le contexte LLM est optimisé (`num_ctx: 2048`, `num_predict: 512`) pour éviter de dépasser la mémoire disponible du GPU.
+> **Base de données** : En mode local, SQLite est utilisé automatiquement (via `DATABASE_URL=sqlite:///./rh_insight.db` dans `.env`). Aucun PostgreSQL requis.
 
-### Démarrage Rapide (avec Docker) (Recommandé)
+### Mode Production (Docker)
 
-1. **Cloner le projet**
+```bash
+# Lancer tous les services (FastAPI + Vue.js + PostgreSQL + ChromaDB)
+docker compose up -d --build
 
-   ```bash
-   git clone <url-du-repo>
-   cd RH_insight-AI
-   ```
+# Initialiser la base de données
+docker exec rh-backend alembic upgrade head
 
-2. **Configuration**
+# Ingérer les CV dans ChromaDB
+docker exec rh-backend python -m backend.scripts.ingest_cv
+```
 
-   ```bash
-   cp .env.example .env
-   # Modifiez le fichier .env (Les modèles Ollama par défaut sont qwen3.5:4b et nomic-embed-text)
-   ```
+- Application : `http://localhost:5173`
+- API Swagger : `http://localhost:8000/docs`
 
-3. **Lancer l'application**
+## ⚡ Optimisations pour Mac (Apple Silicon 16Go)
 
-   ```bash
-   docker compose up -d
-   ```
+Le projet est optimisé pour tourner sur Mac M-series avec 16Go de RAM unifiée :
 
-4. **Initialiser les données (PostgreSQL & ChromaDB)**
+| Paramètre | Valeur | Raison |
+|---|---|---|
+| `num_ctx` | `2048` | Limite l'empreinte KV-Cache GPU |
+| `num_predict` | `512` | Évite d'épuiser la RAM sur de longues réponses |
+| `think` | `false` | Désactive le raisonnement interne de Qwen3.5 (économie de tokens) |
 
-   Une fois les conteneurs lancés, initialisez la base de données et ingérez les CV :
-   ```bash
-   docker exec rh-backend alembic upgrade head
-   docker exec rh-backend python3 scripts/ingest_cv.py
-   ```
+> **Modèles déconseillés sur 16Go** : `qwen3.5:9b`, `deepseek-r1:7b` (risque de swap et timeouts)
 
-L'application est maintenant accessible sur `http://localhost:5173`.
-L'API Swagger est disponible sur `http://localhost:8000/docs`.
+## Documentation
 
-## Documentation détaillée
+| Document | Description |
+|---|---|
+| [Architecture](docs/architecture.md) | Diagramme et détail des composants |
+| [Commandes utiles](docs/commandes_utiles.md) | Référence des commandes dev et prod |
+| [Sécurité](docs/security.md) | Rate limiting, JWT, gestion des secrets |
+| [CI/CD](docs/ci_cd.md) | Pipeline GitHub Actions et stratégie de branches |
 
-- [Architecture détaillée](docs/architecture.md)
-- [Commandes utiles](docs/commandes_utiles.md)
+## Structure du Projet
+
+```
+RH_insight-AI/
+├── backend/
+│   ├── app/
+│   │   ├── agents/      # Agents LangGraph (RAG, SQL, GitHub, Intent)
+│   │   ├── api/         # Endpoints FastAPI (auth, chat)
+│   │   ├── llm/         # Clients Ollama
+│   │   ├── models/      # Modèles SQLAlchemy
+│   │   ├── rag/         # Vector store ChromaDB
+│   │   └── services/    # ChatService (streaming)
+│   ├── scripts/         # Ingestion CV, seed DB, migration
+│   └── tests/           # Tests unitaires et d'intégration
+├── frontend/vue-app/    # Interface Vue.js 3
+├── docs/                # Documentation technique
+├── .github/workflows/   # Pipeline CI/CD
+└── docker-compose.yml   # Orchestration production
+```
 
 ## Auteur
 
-Projet développé par Amaury Rammanat
+Projet développé par **Amaury Rammanat** — Développeur IA (RNCP Niveau 6, Simplon)

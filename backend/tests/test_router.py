@@ -4,8 +4,8 @@ Vérifie le routage vers les bons agents selon l'intention détectée.
 """
 
 import pytest
-from app.graph.router import router, sql_router, rag_router
-from app.config.constants import INTENT_RAG, INTENT_SQL, INTENT_GITHUB, INTENT_GENERAL
+from backend.app.graph.router import router, sql_router, rag_router
+from backend.app.config.constants import INTENT_RAG, INTENT_SQL, INTENT_GITHUB, INTENT_GENERAL
 
 
 class TestRouter:

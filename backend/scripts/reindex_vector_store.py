@@ -6,8 +6,8 @@ from loguru import logger
 # Add project root to path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from app.config.settings import VECTOR_DB_PATH
-from app.rag.embeddings import get_embeddings
+from backend.app.config.settings import VECTOR_DB_PATH
+from backend.app.rag.embeddings import get_embeddings
 from langchain_chroma import Chroma
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 

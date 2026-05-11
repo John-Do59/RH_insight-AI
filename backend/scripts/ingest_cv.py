@@ -1,12 +1,12 @@
 import os
-from app.pdf.extractor import extract_text_from_pdf
-from app.utils.preprocess import clean_spaced_text
-from app.rag.chunking import get_text_chunks
-from app.rag.vector_store import add_texts_to_vector_store
-from app.sql.ingest import extract_structured_data
-from app.sql.database import get_engine
+from backend.app.pdf.extractor import extract_text_from_pdf
+from backend.app.utils.preprocess import clean_spaced_text
+from backend.app.rag.chunking import get_text_chunks
+from backend.app.rag.vector_store import add_texts_to_vector_store
+from backend.app.sql.ingest import extract_structured_data
+from backend.app.sql.database import get_engine
 from sqlalchemy import text
-from app.utils.logger import logger
+from backend.app.utils.logger import logger
 
 def ingest_cv(pdf_path: str):
     logger.info(f"Starting ingestion for {pdf_path}")

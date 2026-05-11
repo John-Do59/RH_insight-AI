@@ -4,8 +4,8 @@ Tests unitaires pour l'Agent GitHub et le client GitHub.
 
 import pytest
 from unittest.mock import MagicMock, patch
-from app.github.github_client import GitHubClient
-from app.agents.github_agent import github_agent
+from backend.app.github.github_client import GitHubClient
+from backend.app.agents.github_agent import github_agent
 
 @pytest.fixture
 def mock_github_client():

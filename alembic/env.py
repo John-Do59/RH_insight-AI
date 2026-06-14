@@ -10,7 +10,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from backend.app.config.settings import DATABASE_URL
-from backend.app.database.session import Base
+from backend.app.models import Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

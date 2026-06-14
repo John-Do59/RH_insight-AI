@@ -1,12 +1,45 @@
+# ── Git & IDE ──────────────────────────────────────────────────────────────
 **/.git
+**/.gitignore
 **/.vscode
+**/.idea
+**/.DS_Store
+
+# ── Python ─────────────────────────────────────────────────────────────────
 **/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
 **/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+**/venv/
+**/.venv/
+
+# ── Env files (secrets) ─────────────────────────────────────────────────────
 **/.env
+**/.env.*
+!**/.env.example
+
+# ── Frontend build artefacts ────────────────────────────────────────────────
 **/node_modules
 **/dist
-backend/tests
-rh_insight.db
-test.db
+**/.nuxt
+
+# ── Tests ──────────────────────────────────────────────────────────────────
+backend/tests/
+**/test_*.py
+**/*_test.py
+
+# ── Data & modèles locaux (JAMAIS dans l'image) ─────────────────────────────
 data/
+*.db
+*.sqlite
 *.pdf
+*.docx
+
+# ── Docs & CI ──────────────────────────────────────────────────────────────
+docs/
+.github/
+*.md
+!README.md

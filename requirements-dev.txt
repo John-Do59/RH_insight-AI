@@ -1,0 +1,21 @@
+# ══════════════════════════════════════════════════════
+# requirements-dev.txt  —  Local dev & tests ONLY
+# (NEVER included in Docker image)
+# ══════════════════════════════════════════════════════
+-r requirements.txt
+
+# HuggingFace fallback embeddings (pulls torch ~2.5GB, dev only)
+langchain-huggingface>=0.1.0
+sentence-transformers>=3.0.0
+
+# Testing
+pytest>=8.0.0
+pytest-asyncio>=0.23.0
+httpx>=0.27.0  # Required for TestClient async support
+
+# Linting
+flake8>=7.0.0
+
+# RAG evaluation (optional, heavy)
+# ragas>=0.2.0
+# deepeval>=0.21.0

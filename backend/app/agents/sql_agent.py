@@ -5,57 +5,40 @@ from backend.app.database.engine import get_engine
 from backend.app.database.validators import validate_sql_query, SQLValidationError
 from backend.app.utils.logger import logger
 
-# SCHEMA ADAPTÉ AU CV
+# SCHEMA D'INFORMATIONS RH
 SCHEMA_INFO = """
-TABLE candidates (mes informations personnelles):
-  - id, first_name (Amaury), last_name (Rammanat)
-  - email (rammanatamaury@gmail.com), phone (0601022320), city (Lille)
+TABLE candidates (candidats):
+  - id, first_name, last_name
+  - email, phone, city
   - summary (résumé du profil)
 
-TABLE skills (mes compétences techniques):
+TABLE skills (compétences techniques):
   - id, candidate_id, skill_name, level
-  - Exemples: Python, SQL, Docker, Langchain, PyTorch, Streamlit, Git...
 
-TABLE experiences (mes expériences pro):
+TABLE experiences (expériences pro):
   - id, candidate_id, company, job_title, start_date, end_date, description
-  - Paysagiste (2020-2025), Gestionnaire milieux naturels (2010-2020)...
 
-TABLE education (mes formations):
+TABLE education (formations):
   - id, candidate_id, school, degree, field, start_year, end_year
-  - Simplon (Dev IA), Apple Foundation, ULCO (Licence, DEUST)...
 
-TABLE projects (mes projets):
+TABLE projects (projets du candidat):
   - id, candidate_id, name, description, technologies
-  - Sport-Unity IA (iOS, chatbot fitness)...
 
 TABLE languages (langues):
   - id, candidate_id, language, level
-  - Anglais B1, Espagnol A2
 """
 
 SQL_EXAMPLES = """
 EXEMPLES DE REQUÊTES :
 
-Question: "Quelles sont tes compétences ?"
-SQL: SELECT skill_name, level FROM skills ORDER BY level DESC;
+Question: "Quels sont les candidats avec Python ?"
+SQL: SELECT c.first_name, c.last_name FROM candidates c JOIN skills s ON c.id = s.candidate_id WHERE LOWER(s.skill_name) LIKE '%python%';
 
-Question: "Tu connais Python ?"
-SQL: SELECT skill_name, level FROM skills WHERE LOWER(skill_name) LIKE '%python%';
+Question: "Quelles sont les formations de Jean Dupont ?"
+SQL: SELECT e.school, e.degree FROM education e JOIN candidates c ON e.candidate_id = c.id WHERE LOWER(c.first_name) = 'jean' AND LOWER(c.last_name) = 'dupont';
 
-Question: "Quelles sont tes formations ?"
-SQL: SELECT school, degree, field, start_year, end_year FROM education ORDER BY start_year DESC;
-
-Question: "Où as-tu travaillé ?"
-SQL: SELECT company, job_title, start_date, end_date FROM experiences ORDER BY start_date DESC;
-
-Question: "Tu parles quelles langues ?"
-SQL: SELECT language, level FROM languages;
-
-Question: "Tes coordonnées ?"
-SQL: SELECT first_name, last_name, email, phone, city FROM candidates LIMIT 1;
-
-Question: "Compétences en IA ?"
-SQL: SELECT skill_name, level FROM skills WHERE LOWER(skill_name) LIKE '%ia%' OR LOWER(skill_name) LIKE '%machine%' OR LOWER(skill_name) LIKE '%learning%' OR LOWER(skill_name) LIKE '%pytorch%' OR LOWER(skill_name) LIKE '%langchain%';
+Question: "Combien y a-t-il de candidats ?"
+SQL: SELECT COUNT(*) FROM candidates;
 """
 
 
@@ -65,13 +48,12 @@ from backend.app.database.engine import get_async_engine
 @profile_async("SQL Agent")
 async def sql_agent(state):
     """
-    Génère et exécute une requête SQL pour le CV d'Amaury.
+    Génère et exécute une requête SQL pour la base de données RH.
     """
     question = state["question"]
     llm = get_fast_llm()
     
-    prompt = f"""Tu génères des requêtes SQL pour interroger le CV d'Amaury Rammanat.
-Il n'y a qu'UN SEUL candidat, pas besoin de filtrer par nom.
+    prompt = f"""Tu génères des requêtes SQL (PostgreSQL) pour interroger une base de données de recrutement contenant plusieurs candidats.
 
 {SCHEMA_INFO}
 
@@ -80,7 +62,8 @@ Il n'y a qu'UN SEUL candidat, pas besoin de filtrer par nom.
 RÈGLES :
 1. SELECT uniquement
 2. Utilise LOWER() et LIKE pour les recherches texte
-3. Renvoie UNIQUEMENT la requête SQL, rien d'autre
+3. Fais des JOIN si nécessaire pour relier les compétences/expériences aux candidats
+4. Renvoie UNIQUEMENT la requête SQL, rien d'autre
 
 Question: {question}
 SQL:"""

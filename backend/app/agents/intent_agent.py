@@ -9,7 +9,7 @@ from backend.app.core.monitoring import profile_async
 _RAG_KEYWORDS = [
     "parcours", "formation", "diplôme", "école", "université", "étude",
     "expérience", "poste", "mission", "projet", "réalisation", "stage",
-    "amaury", "rammanat", "cv", "profil", "candidat",
+    "cv", "profil", "candidat", "offre", "job", "description",
     "compétence", "skill", "technologie", "outil", "langage", "framework",
     "python", "fastapi", "vue", "docker", "langchain", "sql", "machine learning",
     "ia", "intelligence artificielle", "développeur", "ingénieur",
@@ -73,12 +73,12 @@ async def classify_intent(state):
     llm = get_fast_llm()
     
     prompt = (
-        "Tu es un classificateur d'intention pour un assistant IA sur un CV.\n"
+        "Tu es un classificateur d'intention pour un assistant IA de recrutement (RH).\n"
         "Réponds avec UN SEUL MOT parmi: rag, sql, github, general\n"
-        "- rag: questions sur le candidat, ses compétences, son parcours, son CV\n"
-        "- sql: requêtes statistiques sur des bases de données RH\n"
-        "- github: questions sur des projets ou dépôts GitHub\n"
-        "- general: salutations, questions hors sujet\n"
+        "- rag: questions sur les compétences d'un candidat, une analyse de CV ou la description d'une offre d'emploi\n"
+        "- sql: requêtes statistiques ou recherches précises sur la base de données RH (ex: combien de candidats avec Python ?)\n"
+        "- github: questions sur des projets open source ou dépôts GitHub d'un candidat\n"
+        "- general: salutations, questions hors sujet, ou présentation de tes capacités\n"
         f"Question: {question}\n"
         "Intention:"
     )

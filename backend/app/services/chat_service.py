@@ -7,10 +7,12 @@ from backend.app.schemas.chat import ChatMessage
 from backend.app.core.monitoring import profile_async
 from backend.app.config.settings import OLLAMA_BASE_URL, LLM_MODEL_STANDARD
 from backend.app.utils.logger import logger
+from langfuse.decorators import observe
 
 class ChatService:
     @staticmethod
     @profile_async("Global Chat Request")
+    @observe(as_type="generation")
     async def process_question(question: str, history: List[ChatMessage] = None) -> AsyncGenerator[str, None]:
         """
         Process a user question using direct httpx streaming for maximum performance (TTFT < 1s).

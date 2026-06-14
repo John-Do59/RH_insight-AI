@@ -14,8 +14,10 @@ from backend.app.models.skill import Skill, CandidateSkill
 from backend.app.schemas.candidate_schema import CandidateParsedData
 from backend.app.rag.vector_store import get_vector_store
 from backend.app.utils.logger import logger
+from langfuse.decorators import observe
 
 
+@observe()
 def _extract_candidate_data_with_llm(raw_text: str) -> CandidateParsedData:
     """
     Uses an LLM to extract structured data from raw CV text.
@@ -70,6 +72,7 @@ CV :
         )
 
 
+@observe()
 def _persist_candidate(parsed: CandidateParsedData, db: Session, overrides: dict) -> Tuple[Candidate, list[str]]:
     """
     Persists a parsed candidate to PostgreSQL with all structured data and skills.
@@ -120,6 +123,7 @@ def _persist_candidate(parsed: CandidateParsedData, db: Session, overrides: dict
     return candidate, parsed.skills
 
 
+@observe()
 def _index_in_chromadb(candidate: Candidate, parsed: CandidateParsedData) -> None:
     """
     Indexes the candidate profile in ChromaDB for RAG retrieval.
@@ -145,6 +149,7 @@ def _index_in_chromadb(candidate: Candidate, parsed: CandidateParsedData) -> Non
         logger.warning(f"CVParserService: ChromaDB indexation failed (non-blocking): {e}")
 
 
+@observe()
 def run_cv_parser_pipeline(raw_text: str, db: Session, overrides: dict = {}) -> Tuple[Candidate, list[str]]:
     """
     Full pipeline: Extract → Validate → Persist → Index.

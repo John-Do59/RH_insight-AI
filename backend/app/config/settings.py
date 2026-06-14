@@ -12,6 +12,11 @@ LLM_MODEL_STANDARD = os.getenv("LLM_MODEL_STANDARD", "qwen3.5:4b")
 EMBEDDING_PROVIDER = os.getenv("EMBEDDING_PROVIDER", "ollama")
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "qwen3-embedding:0.6b")
 
+# Langfuse Observability
+LANGFUSE_PUBLIC_KEY = os.getenv("LANGFUSE_PUBLIC_KEY")
+LANGFUSE_SECRET_KEY = os.getenv("LANGFUSE_SECRET_KEY")
+LANGFUSE_HOST = os.getenv("LANGFUSE_HOST", "http://localhost:3000")
+
 # Paths
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 SQL_DB_PATH = os.path.join(BASE_DIR, os.getenv("SQL_DB_PATH", "data/sql/recruiter.db"))
@@ -61,4 +66,3 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7 # 1 week
 # CORS
 CORS_ORIGINS_STR = os.getenv("BACKEND_CORS_ORIGINS", "http://localhost:3000,http://localhost:5173,http://localhost:8000")
 BACKEND_CORS_ORIGINS = [origin.strip() for origin in CORS_ORIGINS_STR.split(",") if origin.strip()]
-

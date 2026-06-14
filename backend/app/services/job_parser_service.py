@@ -13,8 +13,10 @@ from backend.app.models.skill import Skill, JobSkill
 from backend.app.schemas.job_schema import JobParsedData
 from backend.app.rag.vector_store import get_vector_store
 from backend.app.utils.logger import logger
+from langfuse.decorators import observe
 
 
+@observe()
 def _extract_job_data_with_llm(raw_text: str) -> JobParsedData:
     """
     Uses an LLM to extract structured data from raw job description text.
@@ -66,6 +68,7 @@ Offre d'emploi :
         )
 
 
+@observe()
 def _persist_job(parsed: JobParsedData, raw_text: str, db: Session, overrides: dict) -> Tuple[Job, list[str]]:
     """
     Persists a parsed job offer to PostgreSQL with all its structured data and skills.
@@ -104,6 +107,7 @@ def _persist_job(parsed: JobParsedData, raw_text: str, db: Session, overrides: d
     return job, all_skills
 
 
+@observe()
 def _index_in_chromadb(job: Job, parsed: JobParsedData) -> None:
     """
     Indexes the job description in ChromaDB for RAG retrieval.
@@ -128,6 +132,7 @@ def _index_in_chromadb(job: Job, parsed: JobParsedData) -> None:
         logger.warning(f"JobParserService: ChromaDB indexation failed (non-blocking): {e}")
 
 
+@observe()
 def run_job_parser_pipeline(raw_text: str, db: Session, overrides: dict = {}) -> Tuple[Job, list[str]]:
     """
     Full pipeline: Extract → Validate → Persist → Index.

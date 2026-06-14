@@ -19,9 +19,9 @@
 
         <!-- Drop zone -->
         <div
-          class="dropzone"
+          class="min-h-[12rem] border-2 border-dashed rounded-2xl flex flex-col items-center justify-center p-8 cursor-pointer transition-all duration-300"
           :class="[
-            candidateDragging ? 'dropzone--active-purple' : 'dropzone--idle-purple',
+            candidateDragging ? 'border-purple-500/70 bg-purple-500/10 scale-[1.01]' : 'border-white/10 hover:border-purple-500/50 hover:bg-purple-500/5',
             candidateStatus === 'processing' ? 'pointer-events-none opacity-60' : ''
           ]"
           @click="$refs.candidateFileInput.click()"
@@ -67,7 +67,7 @@
 
         <!-- Success result -->
         <transition name="slide-up">
-          <div v-if="candidateResult" class="result-card result-card--success">
+          <div v-if="candidateResult" class="p-4 rounded-xl text-sm bg-emerald-500/10 border border-emerald-500/20">
             <div class="flex items-start gap-3">
               <div class="mt-0.5 w-8 h-8 rounded-lg bg-emerald-500/15 flex items-center justify-center flex-shrink-0">
                 <svg class="w-4 h-4 text-emerald-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
@@ -85,7 +85,7 @@
 
         <!-- Error -->
         <transition name="slide-up">
-          <div v-if="candidateError" class="result-card result-card--error">
+          <div v-if="candidateError" class="p-4 rounded-xl text-sm bg-rose-500/10 border border-rose-500/20">
             <div class="flex items-start gap-3">
               <span class="text-rose-400 text-lg">⚠</span>
               <div class="flex-1">
@@ -109,9 +109,9 @@
 
         <!-- Drop zone -->
         <div
-          class="dropzone"
+          class="min-h-[12rem] border-2 border-dashed rounded-2xl flex flex-col items-center justify-center p-8 cursor-pointer transition-all duration-300"
           :class="[
-            jobDragging ? 'dropzone--active-amber' : 'dropzone--idle-amber',
+            jobDragging ? 'border-amber-500/70 bg-amber-500/10 scale-[1.01]' : 'border-white/10 hover:border-amber-500/50 hover:bg-amber-500/5',
             jobStatus === 'processing' ? 'pointer-events-none opacity-60' : ''
           ]"
           @click="$refs.jobFileInput.click()"
@@ -157,7 +157,7 @@
 
         <!-- Success -->
         <transition name="slide-up">
-          <div v-if="jobResult" class="result-card result-card--success">
+          <div v-if="jobResult" class="p-4 rounded-xl text-sm bg-emerald-500/10 border border-emerald-500/20">
             <div class="flex items-start gap-3">
               <div class="mt-0.5 w-8 h-8 rounded-lg bg-emerald-500/15 flex items-center justify-center flex-shrink-0">
                 <svg class="w-4 h-4 text-emerald-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
@@ -175,7 +175,7 @@
 
         <!-- Error -->
         <transition name="slide-up">
-          <div v-if="jobError" class="result-card result-card--error">
+          <div v-if="jobError" class="p-4 rounded-xl text-sm bg-rose-500/10 border border-rose-500/20">
             <div class="flex items-start gap-3">
               <span class="text-rose-400 text-lg">⚠</span>
               <div class="flex-1">
@@ -330,33 +330,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* ── Drop zone ─────────────────────────────────────── */
-.dropzone {
-  @apply min-h-48 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center p-8 cursor-pointer transition-all duration-300;
-}
-.dropzone--idle-purple {
-  @apply border-white/10 hover:border-purple-500/50 hover:bg-purple-500/5;
-}
-.dropzone--active-purple {
-  @apply border-purple-500/70 bg-purple-500/10 scale-[1.01];
-}
-.dropzone--idle-amber {
-  @apply border-white/10 hover:border-amber-500/50 hover:bg-amber-500/5;
-}
-.dropzone--active-amber {
-  @apply border-amber-500/70 bg-amber-500/10 scale-[1.01];
-}
-
-/* ── Result cards ──────────────────────────────────── */
-.result-card {
-  @apply p-4 rounded-xl text-sm;
-}
-.result-card--success {
-  @apply bg-emerald-500/10 border border-emerald-500/20;
-}
-.result-card--error {
-  @apply bg-rose-500/10 border border-rose-500/20;
-}
 
 /* ── Transition ────────────────────────────────────── */
 .slide-up-enter-active { transition: all .35s cubic-bezier(.16,1,.3,1); }

@@ -17,18 +17,49 @@ const router = createRouter({
       meta: { guest: true },
     },
     {
-      path: '/dashboard',
-      name: 'dashboard',
+      // Dashboard shell (sidebar + topbar) — all protected pages live here
+      path: '/',
       component: () => import('../views/DashboardView.vue'),
       meta: { requiresAuth: true },
+      children: [
+        {
+          path: 'dashboard',
+          name: 'dashboard',
+          component: () => import('../views/OverviewView.vue'),
+        },
+        {
+          path: 'candidates',
+          name: 'candidates',
+          component: () => import('../views/CandidatesView.vue'),
+        },
+        {
+          path: 'jobs',
+          name: 'jobs',
+          component: () => import('../views/JobsView.vue'),
+        },
+        {
+          path: 'job-agent',
+          name: 'job-agent',
+          component: () => import('../views/JobAgentView.vue'),
+        },
+        {
+          path: 'ingestion',
+          name: 'ingestion',
+          component: () => import('../views/DataIngestionView.vue'),
+        },
+        {
+          path: 'chat',
+          name: 'chat',
+          component: () => import('../views/ChatView.vue'),
+        },
+      ],
     },
   ],
 });
 
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (to, from) => {
   const authStore = useAuthStore();
-  
-  // Try to fetch user if token exists but no user object
+
   if (authStore.token && !authStore.user) {
     await authStore.fetchUser();
   }
@@ -36,11 +67,9 @@ router.beforeEach(async (to, from, next) => {
   const isAuthenticated = authStore.isAuthenticated;
 
   if (to.meta.requiresAuth && !isAuthenticated) {
-    next({ name: 'auth' });
+    return { name: 'auth' };
   } else if (to.meta.guest && isAuthenticated) {
-    next({ name: 'dashboard' });
-  } else {
-    next();
+    return { name: 'dashboard' };
   }
 });
 

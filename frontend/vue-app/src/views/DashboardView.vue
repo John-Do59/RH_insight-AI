@@ -1,210 +1,148 @@
 <template>
-  <div class="flex h-screen bg-bg-darker text-text-primary overflow-hidden">
-    
-    <!-- Sidebar -->
-    <aside class="w-64 flex-shrink-0 bg-bg-dark border-r border-white/5 flex flex-col z-20">
-      <!-- Logo Area -->
-      <div class="h-16 flex items-center px-6 border-b border-white/5">
+  <div class="flex h-screen overflow-hidden" style="background: var(--color-bg-void);">
+
+    <!-- Glass Sidebar -->
+    <aside class="glass-sidebar w-64 flex-shrink-0 flex flex-col z-20">
+      <!-- Logo -->
+      <div class="h-16 flex items-center px-5 border-b border-white/5">
         <div class="flex items-center gap-3">
-          <div class="w-8 h-8 rounded-lg bg-gradient-premium flex items-center justify-center glow-subtle">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>
+          <div class="w-8 h-8 rounded-xl flex items-center justify-center"
+               style="background: linear-gradient(135deg, #3B82F6, #8B5CF6); box-shadow: 0 0 16px rgba(59,130,246,0.4)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>
           </div>
-          <span class="font-heading font-bold text-lg tracking-tight text-white">RH Insight</span>
+          <div>
+            <span class="font-heading font-bold text-white tracking-tight text-sm block">RH Insight</span>
+            <span class="text-[10px] text-text-secondary tracking-widest uppercase">AI Platform</span>
+          </div>
         </div>
       </div>
-      
+
       <!-- Navigation -->
-      <nav class="flex-1 overflow-y-auto py-6 px-4 space-y-1">
-        <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/5 text-white font-medium border border-white/5">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-accent-light"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-          AI Chat
-        </a>
-        <!-- Other Nav Items (Placeholder) -->
+      <nav class="flex-1 overflow-y-auto py-5 px-3 space-y-1">
+        <router-link v-for="item in navItems" :key="item.to"
+          :to="item.to"
+          class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group"
+          :class="isActive(item.to)
+            ? 'bg-white/8 text-white border border-white/10'
+            : 'text-text-secondary hover:text-white hover:bg-white/4'"
+        >
+          <span class="w-5 h-5 flex-shrink-0 transition-colors"
+                :class="isActive(item.to) ? item.activeColor : 'text-text-muted group-hover:text-text-secondary'"
+                v-html="item.icon"></span>
+          {{ item.label }}
+          <span v-if="item.badge" class="ml-auto badge badge--blue text-[10px]">{{ item.badge }}</span>
+        </router-link>
       </nav>
-      
-      <!-- User Profile -->
-      <div class="p-4 border-t border-white/5">
-        <div @click="handleLogout" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-red-500/10 cursor-pointer transition-colors group">
-          <div class="w-8 h-8 rounded-full bg-surface border border-white/10 flex items-center justify-center text-sm font-medium text-white group-hover:border-red-500/20">
+
+      <!-- Bottom: user + logout -->
+      <div class="p-3 border-t border-white/5">
+        <div @click="handleLogout"
+             class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-rose-500/10 cursor-pointer transition-all group">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white"
+               style="background: linear-gradient(135deg, #3B82F6, #8B5CF6);">
             {{ userInitials }}
           </div>
           <div class="flex-1 overflow-hidden">
-            <p class="text-sm font-medium text-white truncate group-hover:text-red-400">{{ userName }}</p>
-            <p class="text-xs text-text-secondary truncate">Déconnexion</p>
+            <p class="text-sm font-medium text-white truncate group-hover:text-rose-400">{{ userName }}</p>
+            <p class="text-xs text-text-secondary">Déconnexion</p>
           </div>
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-text-secondary group-hover:text-red-400"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-text-muted group-hover:text-rose-400"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
         </div>
       </div>
     </aside>
 
-    <!-- Main Chat Area -->
-    <main class="flex-1 flex flex-col relative">
+    <!-- Main area -->
+    <main class="flex-1 flex flex-col min-w-0 overflow-hidden">
+
       <!-- Topbar -->
-      <header class="h-16 flex items-center justify-between px-6 border-b border-white/5 bg-bg-dark/50 backdrop-blur-sm z-10">
+      <header class="h-16 flex items-center justify-between px-6 border-b border-white/5 flex-shrink-0"
+              style="background: rgba(3,7,18,0.6); backdrop-filter: blur(20px);">
+        <h1 class="font-heading font-semibold text-white tracking-tight">{{ pageTitle }}</h1>
         <div class="flex items-center gap-2">
-          <span class="flex items-center gap-2 px-2.5 py-1 rounded-md bg-accent/10 border border-accent/20 text-xs font-medium text-accent-light">
-            <span class="w-1.5 h-1.5 rounded-full bg-accent-light animate-pulse"></span>
-            DeepSeek-R1 Active
+          <span class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium"
+                style="background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); color: #6EE7B7;">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            IA Opérationnelle
           </span>
         </div>
       </header>
 
-      <!-- Chat History -->
-      <div class="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth" ref="chatContainer">
-        
-        <!-- Welcome Message -->
-        <div v-if="messages.length === 0" class="h-full flex flex-col items-center justify-center text-center max-w-2xl mx-auto">
-          <div class="w-16 h-16 rounded-2xl bg-gradient-premium p-[1px] mb-6 shadow-lg shadow-accent/20">
-            <div class="w-full h-full bg-bg-dark rounded-2xl flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-accent-light"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>
-            </div>
-          </div>
-          <h2 class="text-2xl font-bold mb-2 text-white">Comment puis-je vous aider, {{ userName }} ?</h2>
-          <p class="text-text-secondary mb-8">Posez des questions sur les candidats ou analysez les données RH.</p>
-        </div>
-
-        <!-- Messages -->
-        <div v-for="(msg, index) in messages" :key="index" 
-             class="flex gap-4" 
-             :class="msg.role === 'user' ? 'flex-row-reverse' : ''">
-          
-          <!-- Avatar -->
-          <div class="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center"
-               :class="msg.role === 'user' ? 'bg-surface border border-white/10' : 'bg-gradient-premium'">
-            <span v-if="msg.role === 'user'" class="text-xs font-medium text-white">{{ userInitials }}</span>
-            <svg v-else xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>
-          </div>
-
-          <!-- Bubble -->
-          <div class="max-w-[80%] rounded-2xl px-5 py-3.5 text-sm leading-relaxed"
-               :class="msg.role === 'user' ? 'bg-primary-light text-white rounded-tr-sm' : 'glass-card border border-white/5 rounded-tl-sm text-text-primary'">
-            <div class="whitespace-pre-wrap">{{ msg.content }}</div>
-            
-            <!-- Metadata for assistant responses -->
-            <div v-if="msg.role === 'assistant' && msg.sources && msg.sources.length" class="mt-3 pt-3 border-t border-white/5 flex flex-wrap gap-2">
-              <span v-for="source in msg.sources" :key="source" class="px-2 py-0.5 rounded bg-white/5 text-[10px] text-text-secondary uppercase tracking-wider font-bold">
-                {{ source }}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Typing Indicator -->
-        <div v-if="isTyping" class="flex gap-4">
-          <div class="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center bg-gradient-premium">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>
-          </div>
-          <div class="glass-card border border-white/5 rounded-2xl rounded-tl-sm px-5 py-3.5">
-            <div class="flex gap-1">
-              <span class="w-1.5 h-1.5 rounded-full bg-text-secondary animate-bounce" style="animation-delay: 0ms"></span>
-              <span class="w-1.5 h-1.5 rounded-full bg-text-secondary animate-bounce" style="animation-delay: 150ms"></span>
-              <span class="w-1.5 h-1.5 rounded-full bg-text-secondary animate-bounce" style="animation-delay: 300ms"></span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Input Area -->
-      <div class="p-6 bg-bg-darker/80 backdrop-blur-md">
-        <div class="max-w-4xl mx-auto relative">
-          <form @submit.prevent="handleSendMessage" class="relative group">
-            <div class="absolute -inset-1 bg-gradient-premium rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
-            <div class="relative flex items-end gap-2 bg-surface border border-white/10 rounded-2xl p-2 focus-within:border-accent-light/50 transition-colors">
-              <textarea v-model="inputText"
-                        @keydown.enter.prevent="handleSendMessage"
-                        placeholder="Posez votre question à RH Insight..." 
-                        class="w-full bg-transparent text-white border-none focus:ring-0 resize-none py-2 px-2 max-h-32 focus:outline-none placeholder:text-text-secondary/50 text-sm"
-                        rows="1"></textarea>
-              
-              <button type="submit" 
-                      :disabled="!inputText.trim() || isTyping"
-                      class="p-2 bg-gradient-premium rounded-xl text-white hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed glow-subtle">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
-              </button>
-            </div>
-          </form>
-        </div>
+      <!-- Page content -->
+      <div class="flex-1 overflow-y-auto">
+        <router-view />
       </div>
     </main>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onUpdated, nextTick } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
-import { chatService } from '../services/chat'
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
-const chatContainer = ref(null)
-
-const inputText = ref('')
-const messages = ref([])
-const isTyping = ref(false)
 
 const userName = computed(() => authStore.user?.full_name || 'Utilisateur')
 const userInitials = computed(() => {
-  const name = userName.value
-  return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)
+  return userName.value.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)
 })
 
-const scrollToBottom = () => {
-  if (chatContainer.value) {
-    chatContainer.value.scrollTop = chatContainer.value.scrollHeight
+const pageTitle = computed(() => {
+  const titles = {
+    '/dashboard': 'Vue d\'ensemble',
+    '/candidates': 'Candidats',
+    '/jobs': 'Offres',
+    '/job-agent': 'Assistant Recrutement',
+    '/search': 'Recherche',
   }
-}
-
-onUpdated(() => {
-  scrollToBottom()
+  return titles[route.path] || 'RH Insight AI'
 })
+
+const isActive = (path) => route.path === path
+
+const navItems = [
+  {
+    to: '/dashboard',
+    label: 'Vue d\'ensemble',
+    activeColor: 'text-blue-400',
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>`
+  },
+  {
+    to: '/candidates',
+    label: 'Candidats',
+    activeColor: 'text-purple-400',
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`
+  },
+  {
+    to: '/jobs',
+    label: 'Offres d\'emploi',
+    activeColor: 'text-amber-400',
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>`
+  },
+  {
+    to: '/job-agent',
+    label: 'Match d\'offre',
+    activeColor: 'text-emerald-400',
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>`
+  },
+  {
+    to: '/chat',
+    label: 'Assistant IA',
+    activeColor: 'text-pink-400',
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`
+  },
+  {
+    to: '/ingestion',
+    label: 'Ingestion Données',
+    activeColor: 'text-orange-400',
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>`
+  },
+]
 
 const handleLogout = () => {
   authStore.logout()
   router.push('/auth')
-}
-
-const handleSendMessage = async () => {
-  if (!inputText.value.trim() || isTyping.value) return
-
-  const question = inputText.value
-  messages.value.push({ role: 'user', content: question })
-  inputText.value = ''
-  isTyping.value = true
-
-  // We don't pre-add the assistant bubble — we add it on first token to avoid double-bubble
-  let messageIndex = -1
-  let firstToken = true
-
-  try {
-    const history = messages.value.slice(0, -1) // Exclude current user msg
-    
-    await chatService.streamMessage(question, history, (token) => {
-      if (firstToken) {
-        // Only NOW do we add the bubble and hide the typing indicator
-        isTyping.value = false
-        messageIndex = messages.value.push({
-          role: 'assistant',
-          content: '',
-          sources: []
-        }) - 1
-        firstToken = false
-      }
-      messages.value[messageIndex].content += token
-      nextTick(() => scrollToBottom())
-    })
-
-  } catch (err) {
-    console.error('Chat error:', err)
-    isTyping.value = false
-    messages.value.push({
-      role: 'assistant',
-      content: "Désolé, une erreur est survenue. Vérifiez que le modèle Ollama est bien téléchargé.",
-      sources: ['error']
-    })
-  } finally {
-    isTyping.value = false
-    nextTick(() => scrollToBottom())
-  }
 }
 </script>

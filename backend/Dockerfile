@@ -1,27 +1,22 @@
 # ═══════════════════════════════════════════════════════════════════════════
-# Backend Dockerfile — Alpine optimisé
-# Cible : 400–600 MB (vs 9GB initial, 803MB précédent)
+# Backend Dockerfile — Optimisé (Debian Slim)
 #
-# Gains vs slim :
-#   alpine = 5MB base (vs 25MB slim)
-#   musl libc = pas de glibc overhead
-#   --no-compile + strip = .pyc au besoin uniquement
+# Note: Alpine a été abandonné car des librairies ML comme `onnxruntime`
+# (requise par ChromaDB) n'ont pas de wheels pré-compilés pour musl (Alpine).
+# Debian Slim offre les wheels binaires et reste très léger.
 # ═══════════════════════════════════════════════════════════════════════════
 
 # ── Stage 1 : Builder ──────────────────────────────────────────────────────
-FROM python:3.11-alpine AS builder
+FROM python:3.11-slim AS builder
 
 WORKDIR /build
 
 # Dépendances de compilation (dev-only, pas copiées en runtime)
-RUN apk add --no-cache \
-    build-base \
-    postgresql-dev \
-    musl-dev \
-    libffi-dev \
-    openssl-dev \
-    cargo \
-    git
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    git \
+    && rm -rf /var/lib/apt/lists/*
 
 # Upgrade pip
 RUN pip install --upgrade pip wheel setuptools
@@ -32,27 +27,24 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 # Installer les dépendances prod uniquement
 COPY requirements.txt .
-RUN pip install --no-cache-dir --no-compile -r requirements.txt
+RUN pip install --no-cache-dir --compile -r requirements.txt
 
 # Nettoyage post-install agressif
 RUN find /opt/venv -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
 RUN find /opt/venv -type d -name "tests" -path "*/site-packages/*" -exec rm -rf {} + 2>/dev/null || true
-RUN find /opt/venv -name "*.pyc" -delete 2>/dev/null || true
-RUN find /opt/venv -name "*.pyo" -delete 2>/dev/null || true
-# Supprimer docs embarquées dans les packages
 RUN find /opt/venv -type d -name "docs" -path "*/site-packages/*" -exec rm -rf {} + 2>/dev/null || true
 RUN find /opt/venv -type d -name "examples" -path "*/site-packages/*" -exec rm -rf {} + 2>/dev/null || true
 
 # ── Stage 2 : Runtime ──────────────────────────────────────────────────────
-FROM python:3.11-alpine
+FROM python:3.11-slim
 
 WORKDIR /app
 
-# Uniquement les libs runtime (pas build-base)
-RUN apk add --no-cache \
-    libpq \
+# Uniquement les libs runtime
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 \
     curl \
-    && rm -rf /var/cache/apk/*
+    && rm -rf /var/lib/apt/lists/*
 
 # Copier le venv compilé
 COPY --from=builder /opt/venv /opt/venv
@@ -64,17 +56,16 @@ ENV TRANSFORMERS_OFFLINE=1 \
     TOKENIZERS_PARALLELISM=false \
     ANONYMIZED_TELEMETRY=false \
     LANGCHAIN_TRACING_V2=false \
-    PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1
+    PYTHONUNBUFFERED=1
 
 # Non-root user
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 USER appuser
 
 # Copier uniquement le code applicatif
-COPY --chown=appuser:appgroup backend/ /app/backend/
-COPY --chown=appuser:appgroup alembic/ /app/alembic/
-COPY --chown=appuser:appgroup alembic.ini /app/alembic.ini
+COPY --chown=appuser:appuser backend/ /app/backend/
+COPY --chown=appuser:appuser alembic/ /app/alembic/
+COPY --chown=appuser:appuser alembic.ini /app/alembic.ini
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:8000/api/v1/health || exit 1

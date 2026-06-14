@@ -1,71 +1,130 @@
-# Architecture de RH Insight AI
+# RH Insight AI — Architecture Globale (v2)
 
-Ce document décrit l'architecture technique et le flux de données de la plateforme.
+> **Mis à jour le** : Juin 2026  
+> **Version** : 2.0 — Architecture Multi-Agents
 
-## 1. Vue d'Ensemble
+---
 
-RH Insight AI est une application basée sur une architecture **Multi-Agents** orchestrée par **LangGraph**, optimisée pour la performance et la latence (Étape 5).
+## Résumé de l'Évolution
 
-## 4. Modèles de Langage (LLMs)
+| Version | Architecture | Base de données | Infra |
+|---|---|---|---|
+| v1 (origine) | RAG simple + Chatbot | SQLite | Serveur local |
+| **v2 (actuelle)** | **Multi-agents LangGraph** | **PostgreSQL + pgvector** | **Docker + Traefik** |
 
-Le projet utilise une stratégie hybride via **Ollama** pour maximiser la performance sur puce Apple Silicon (M4 Pro) :
-- **Qwen 3.5 (4B)** : Modèle principal (Standard). Utilisé pour l'intention, le SQL, la synthèse RAG et les réponses standards. Offre un compromis idéal vitesse (30-60 tok/sec) / précision.
-- **DeepSeek-R1 (7B)** : Modèle de raisonnement (Reasoning). Utilisé uniquement pour les requêtes hybrides ou complexes nécessitant une analyse approfondie.
+---
 
-### Points clés de l'architecture moderne :
-- **Backend Asynchrone** : Utilisation intensive de `FastAPI`, `httpx`, `aiosqlite` et `ainvoke`.
-- **Streaming de Tokens** : Réponse en temps réel via `StreamingResponse` pour une expérience premium.
-- **Model Routing** : Sélection dynamique du modèle LLM en fonction de la complexité de la tâche.
+## Vue Système Globale
 
-## 2. Orchestration et Flux (LangGraph)
-
-Le flux de décision est géré par un graphe d'états asynchrone qui assemble le contexte avant la génération finale.
-
-### Diagramme de Flux (Phase d'Inférence)
-```mermaid
-graph TD
-    User([Utilisateur]) --> API[FastAPI Endpoint]
-    API --> Graph[LangGraph Execution]
-    
-    subgraph "LangGraph (Async)"
-    Graph --> Intent[Agent d'Intention]
-    Intent --> Router{Router}
-    Router -- "CV" --> RAG[Agent RAG]
-    Router -- "Stats" --> SQL[Agent SQL]
-    Router -- "Tech" --> GitHub[Agent GitHub]
-    RAG --> Response[Response Agent]
-    SQL --> Response
-    GitHub --> Response
-    Response --> Assembly[Prompt Assembly]
-    end
-    
-    Assembly --> LLM_Route{Model Router}
-    LLM_Route -- "Simple" --> FastModel[Qwen 3.5 4B]
-    LLM_Route -- "Complex" --> DeepSeek[DeepSeek-R1]
-    
-    FastModel --> Stream[Token Stream]
-    DeepSeek --> Stream
-    Stream --> User
+```
+Utilisateur (Browser)
+        ↓ HTTPS
+     Traefik (Reverse Proxy + Let's Encrypt)
+        ├── /            → Frontend (Vue.js 3 via Nginx)
+        └── /api         → Backend (FastAPI via Uvicorn)
+                                ↓
+                         LangGraph Agents
+                          ├── Chat Agent (RAG + SQL + GitHub)
+                          ├── Matching Agent (Scoring IA)
+                          └── Job Parser Agent (Extraction LLM)
+                                ↓
+                    ┌───────────────────────────┐
+                    │   PostgreSQL + pgvector   │
+                    │   (Données + Embeddings)  │
+                    └───────────────────────────┘
+                                ↓
+                           Redis (Cache)
+                                ↓
+                        Ollama (LLM local)
 ```
 
-## 3. Composants Techniques
+---
 
-### Frontend (Vue.js 3)
-- **Architecture** : Vue 3 (Composition API) + Pinia + Vue Router.
-- **Communication** : API Fetch pour le support natif du streaming de tokens.
-- **Sécurité** : JWT stocké dans le state manager avec intercepteurs Axios (pour les appels hors chat).
+## Branches et Fonctionnalités Implémentées
 
-### Backend (FastAPI Modulaire)
-- **Core** : `monitoring.py` pour le profiling de la latence de chaque composant.
-- **Agents** : Entièrement refactorisés en `async` pour éviter tout blocage de l'Event Loop.
-- **SQL** : `SQLAlchemy 2.0` avec moteur asynchrone `asyncpg` sur base de données **PostgreSQL**.
-- **RAG** : Recherche vectorielle Chroma optimisée par cache LRU pour les embeddings.
+| Branche | Fonctionnalité | Doc |
+|---|---|---|
+| `feature/database-design` | Modèles SQLAlchemy 2.0, pgvector, Alembic | [postgresql_migration.md](./postgresql_migration.md) |
+| `feature/docker-production-infrastructure` | Dockerfiles, compose dev/prod, Nginx | [docker.md](./docker.md) |
+| `feature/docker-production-infrastructure` | Traefik reverse proxy + HTTPS | [traefik.md](./traefik.md) |
+| `feature/cicd-production-ready` | GitHub Actions, GHCR, simulation VPS | [cicd.md](./cicd.md) |
+| `feature/matching-engine-v1` | LangGraph Matching Agent + API | [matching_engine.md](./matching_engine.md) |
+| `feature/matching-engine-e2e-tests` | Suite de tests E2E complète | [tests_e2e.md](./tests_e2e.md) |
+| `feature/job-intake-chat-agent` | Job Parser + Interface Chat IA | [matching_engine.md](./matching_engine.md#job-intake-chat-agent) |
 
-## 4. Stratégie de Latence (Étape 5)
+---
 
-| Composant | Optimisation | Impact |
-| :--- | :--- | :--- |
-| LLM | Model Routing (Qwen vs DeepSeek) | -50% latence sur questions simples |
-| I/O | Async complet (SQL, GitHub, RAG) | Fluidité totale de l'Event Loop |
-| UX | Streaming de Tokens | Perception de réponse instantanée |
-| Data | Cache LRU (Embeddings) | -300ms par recherche RAG |
+## Stack Technique Complète
+
+### Backend
+- **Framework** : FastAPI (async)
+- **ORM** : SQLAlchemy 2.0 (Mapped[], déclaratif moderne)
+- **Agents IA** : LangGraph (StateGraph)
+- **LLM** : Ollama (Qwen 3.5 4B + DeepSeek-R1 7B)
+- **Migrations** : Alembic
+
+### Frontend
+- **Framework** : Vue.js 3 (Composition API)
+- **State** : Pinia
+- **Routing** : Vue Router
+- **HTTP** : Axios
+
+### Infrastructure
+- **Conteneurisation** : Docker + Docker Compose
+- **Reverse Proxy** : Traefik v2.10
+- **Registry** : GHCR (GitHub Container Registry)
+- **CI/CD** : GitHub Actions
+
+### Base de Données
+- **SGBD** : PostgreSQL 16
+- **Extension vectorielle** : pgvector (HNSW, cosine similarity)
+- **Cache** : Redis 7
+
+---
+
+## Démarrage Rapide
+
+### Développement local
+
+```bash
+# 1. Cloner et configurer
+cp .env.example .env  # Remplir les variables
+
+# 2. Activer venv et installer les dépendances
+python -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+
+# 3. Lancer les migrations
+alembic upgrade head
+
+# 4. Démarrer les services (hot-reload)
+docker compose -f docker/docker-compose.dev.yml up
+
+# 5. Backend séparément (optionnel, si pas dans Docker)
+uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+### Simulation VPS locale
+
+```bash
+docker compose -f docker/docker-compose.local-prod.yml up -d
+# → Frontend : http://localhost/
+# → API : http://localhost/api/
+# → Docs : http://localhost/docs
+```
+
+### Tests E2E
+
+```bash
+python backend/tests/utils/test_runner.py
+```
+
+---
+
+## Prochaines Étapes
+
+- [ ] Monitoring : Prometheus + Grafana + Loki
+- [ ] Déploiement VPS réel + configuration DNS + SSH deploy
+- [ ] Dashboard RH (ranking global, métriques candidats)
+- [ ] Agent de recherche avancée (filtres, full-text)
+- [ ] Indexation automatique des embeddings lors de l'ajout d'un candidat

@@ -10,12 +10,12 @@ from backend.app.models.base import Base, BaseModelMixin
 class CandidateEmbedding(Base, BaseModelMixin):
     __tablename__ = "candidate_embeddings"
 
-    candidate_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("candidates.id"), index=True)
+    candidate_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("candidates.id"), index=True)  # noqa: F821
     chunk_text: Mapped[str] = mapped_column(Text)
     embedding: Mapped[Optional[list[float]]] = mapped_column(Vector(768), nullable=True)
-    metadata_: Mapped[Optional[dict]] = mapped_column("metadata", JSONB, nullable=True)
+    metadata_: Mapped[Optional[dict]] = mapped_column("metadata", JSONB, nullable=True)  # noqa: F821
 
-    candidate: Mapped["Candidate"] = relationship(back_populates="embeddings")
+    candidate: Mapped["Candidate"] = relationship(back_populates="embeddings")  # noqa: F821
 
     __table_args__ = (
         Index(
@@ -31,12 +31,12 @@ class CandidateEmbedding(Base, BaseModelMixin):
 class JobEmbedding(Base, BaseModelMixin):
     __tablename__ = "job_embeddings"
 
-    job_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("jobs.id"), index=True)
+    job_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("jobs.id"), index=True)  # noqa: F821
     chunk_text: Mapped[str] = mapped_column(Text)
     embedding: Mapped[Optional[list[float]]] = mapped_column(Vector(768), nullable=True)
-    metadata_: Mapped[Optional[dict]] = mapped_column("metadata", JSONB, nullable=True)
+    metadata_: Mapped[Optional[dict]] = mapped_column("metadata", JSONB, nullable=True)  # noqa: F821
 
-    job: Mapped["Job"] = relationship(back_populates="embeddings")
+    job: Mapped["Job"] = relationship(back_populates="embeddings")  # noqa: F821
 
     __table_args__ = (
         Index(

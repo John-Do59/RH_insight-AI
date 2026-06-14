@@ -26,7 +26,7 @@ class Candidate(Base, BaseModelMixin):
     embedding: Mapped[Optional[list[float]]] = mapped_column(Vector(768), nullable=True)
 
     # Relationships
-    skill_associations: Mapped[List["CandidateSkill"]] = relationship(back_populates="candidate", cascade="all, delete-orphan")
-    embeddings: Mapped[List["CandidateEmbedding"]] = relationship(back_populates="candidate", cascade="all, delete-orphan")
-    job_matches: Mapped[List["CandidateJobMatch"]] = relationship(back_populates="candidate", cascade="all, delete-orphan")
-    github_profile: Mapped[Optional["GithubProfile"]] = relationship(back_populates="candidate", uselist=False, cascade="all, delete-orphan")
+    skill_associations: Mapped[List["CandidateSkill"]] = relationship(back_populates="candidate", cascade="all, delete-orphan")  # noqa: F821
+    embeddings: Mapped[List["CandidateEmbedding"]] = relationship(back_populates="candidate", cascade="all, delete-orphan")  # noqa: F821
+    job_matches: Mapped[List["CandidateJobMatch"]] = relationship(back_populates="candidate", cascade="all, delete-orphan")  # noqa: F821
+    github_profile: Mapped[Optional["GithubProfile"]] = relationship(back_populates="candidate", uselist=False, cascade="all, delete-orphan")  # noqa: F821

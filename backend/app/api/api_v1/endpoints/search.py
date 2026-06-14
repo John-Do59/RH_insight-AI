@@ -158,10 +158,15 @@ def semantic_search(request: SemanticSearchRequest, db: Session = Depends(get_db
     - "location": chaine vide si non mentionné
     """
     
+    from langchain_core.messages import SystemMessage, HumanMessage
     import json
-    response_text = ollama_client.generate(
-        prompt=prompt, system_prompt="Réponds uniquement en JSON valide."
-    )
+    
+    llm = get_fast_llm()
+    messages = [
+        SystemMessage(content="Réponds uniquement en JSON valide."),
+        HumanMessage(content=prompt)
+    ]
+    response_text = llm.invoke(messages).content
     
     try:
         start = response_text.find("{")

@@ -10,7 +10,7 @@ from backend.app.models.base import Base, BaseModelMixin
 class GithubProfile(Base, BaseModelMixin):
     __tablename__ = "github_profiles"
 
-    candidate_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("candidates.id"), unique=True)
+    candidate_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("candidates.id"), unique=True)  # noqa: F821
     username: Mapped[Optional[str]] = mapped_column(String, index=True, nullable=True)
     repositories_count: Mapped[Optional[int]] = mapped_column(Integer, default=0)
     languages: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
@@ -19,4 +19,4 @@ class GithubProfile(Base, BaseModelMixin):
     
     embedding: Mapped[Optional[list[float]]] = mapped_column(Vector(768), nullable=True)
 
-    candidate: Mapped["Candidate"] = relationship(back_populates="github_profile")
+    candidate: Mapped["Candidate"] = relationship(back_populates="github_profile")  # noqa: F821

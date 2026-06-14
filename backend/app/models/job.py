@@ -24,6 +24,6 @@ class Job(Base, BaseModelMixin):
     embedding: Mapped[Optional[list[float]]] = mapped_column(Vector(768), nullable=True)
 
     # Relationships
-    skill_associations: Mapped[List["JobSkill"]] = relationship(back_populates="job", cascade="all, delete-orphan")
-    embeddings: Mapped[List["JobEmbedding"]] = relationship(back_populates="job", cascade="all, delete-orphan")
-    candidate_matches: Mapped[List["CandidateJobMatch"]] = relationship(back_populates="job", cascade="all, delete-orphan")
+    skill_associations: Mapped[List["JobSkill"]] = relationship(back_populates="job", cascade="all, delete-orphan")  # noqa: F821
+    embeddings: Mapped[List["JobEmbedding"]] = relationship(back_populates="job", cascade="all, delete-orphan")  # noqa: F821
+    candidate_matches: Mapped[List["CandidateJobMatch"]] = relationship(back_populates="job", cascade="all, delete-orphan")  # noqa: F821

@@ -1,0 +1,18 @@
+http:
+  middlewares:
+    security-headers:
+      headers:
+        sslRedirect: true
+        forceSTSHeader: true
+        stsIncludeSubdomains: true
+        stsPreload: true
+        stsSeconds: 31536000
+        contentTypeNosniff: true
+        browserXssFilter: true
+        referrerPolicy: "strict-origin-when-cross-origin"
+    
+    # Optional rate limiting fallback
+    rate-limit:
+      rateLimit:
+        average: 100
+        burst: 50

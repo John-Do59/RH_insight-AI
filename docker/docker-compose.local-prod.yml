@@ -1,0 +1,109 @@
+version: '3.8'
+
+services:
+  traefik:
+    image: traefik:v2.10
+    container_name: rh-traefik-local-prod
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro
+      - traefik_certificates_local:/etc/traefik/acme
+    env_file:
+      - ../.env
+    networks:
+      - rh-insight-net-local
+
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: rh-postgres-local-prod
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-rh_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-rh_password}
+      POSTGRES_DB: ${POSTGRES_DB:-rh_insight}
+    command: 
+      - "postgres"
+      - "-c"
+      - "max_connections=200"
+      - "-c"
+      - "shared_buffers=256MB"
+    volumes:
+      - postgres_data_local:/var/lib/postgresql/data
+    networks:
+      - rh-insight-net-local
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-rh_user}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: rh-redis-local-prod
+    restart: always
+    volumes:
+      - redis_data_local:/data
+    networks:
+      - rh-insight-net-local
+
+  backend:
+    # Use context build for local simulation. In actual VPS, this would be `image: ghcr.io/<user>/rh-backend:latest`
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+    container_name: rh-backend-local-prod
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    env_file:
+      - ../.env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-rh_user}:${POSTGRES_PASSWORD:-rh_password}@db:5432/${POSTGRES_DB:-rh_insight}
+      REDIS_URL: redis://redis:6379/0
+      # Use host.docker.internal to reach Ollama locally during the simulation
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - rh-insight-net-local
+    labels:
+      - "traefik.enable=true"
+      # Route localhost for the simulation
+      - "traefik.http.routers.backend-local.rule=Host(`localhost`) && PathPrefix(`/api`, `/docs`, `/openapi.json`)"
+      - "traefik.http.routers.backend-local.entrypoints=web"
+      - "traefik.http.services.backend-local.loadbalancer.server.port=8000"
+
+  frontend:
+    # Use context build for local simulation. In actual VPS, this would be `image: ghcr.io/<user>/rh-frontend:latest`
+    build:
+      context: ..
+      dockerfile: frontend/Dockerfile
+    container_name: rh-frontend-local-prod
+    restart: always
+    depends_on:
+      - backend
+    networks:
+      - rh-insight-net-local
+    labels:
+      - "traefik.enable=true"
+      # Route localhost for the simulation
+      - "traefik.http.routers.frontend-local.rule=Host(`localhost`)"
+      - "traefik.http.routers.frontend-local.entrypoints=web"
+      - "traefik.http.services.frontend-local.loadbalancer.server.port=80"
+
+networks:
+  rh-insight-net-local:
+    driver: bridge
+
+volumes:
+  postgres_data_local:
+  redis_data_local:
+  traefik_certificates_local:

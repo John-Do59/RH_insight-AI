@@ -14,7 +14,7 @@ from backend.app.models.skill import Skill, CandidateSkill
 from backend.app.schemas.candidate_schema import CandidateParsedData
 from backend.app.rag.vector_store import get_vector_store
 from backend.app.utils.logger import logger
-from langfuse.decorators import observe
+from langfuse import observe
 
 
 @observe()

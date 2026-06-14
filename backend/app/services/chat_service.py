@@ -7,7 +7,7 @@ from backend.app.schemas.chat import ChatMessage
 from backend.app.core.monitoring import profile_async
 from backend.app.config.settings import OLLAMA_BASE_URL, LLM_MODEL_STANDARD
 from backend.app.utils.logger import logger
-from langfuse.decorators import observe
+from langfuse import observe
 
 class ChatService:
     @staticmethod

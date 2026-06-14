@@ -1,84 +1,81 @@
 # ═══════════════════════════════════════════════════════════════════════════
-# Backend Dockerfile — Optimisé taille d'image
-# Objectif cible : < 2.5GB (vs 9GB non-optimisé)
+# Backend Dockerfile — Alpine optimisé
+# Cible : 400–600 MB (vs 9GB initial, 803MB précédent)
 #
-# Stratégie :
-#   1. Builder stage: compile wheels en isolation (inclut build-essential)
-#   2. Runtime stage: copie uniquement les wheels compilés, sans toolchain
-#   3. Variables d'environnement agressives pour désactiver les caches PyTorch/HF
+# Gains vs slim :
+#   alpine = 5MB base (vs 25MB slim)
+#   musl libc = pas de glibc overhead
+#   --no-compile + strip = .pyc au besoin uniquement
 # ═══════════════════════════════════════════════════════════════════════════
 
 # ── Stage 1 : Builder ──────────────────────────────────────────────────────
-FROM python:3.11-slim AS builder
+FROM python:3.11-alpine AS builder
 
 WORKDIR /build
 
-# Dépendances de compilation (libpq-dev pour psycopg2-binary)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    libpq-dev \
-    git \
-    && rm -rf /var/lib/apt/lists/*
+# Dépendances de compilation (dev-only, pas copiées en runtime)
+RUN apk add --no-cache \
+    build-base \
+    postgresql-dev \
+    musl-dev \
+    libffi-dev \
+    openssl-dev \
+    cargo \
+    git
 
-# Upgrade pip & wheel
+# Upgrade pip
 RUN pip install --upgrade pip wheel setuptools
 
-# Installer les dépendances dans un venv isolé
+# Venv isolé
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Copier uniquement le requirements de prod (pas dev)
+# Installer les dépendances prod uniquement
 COPY requirements.txt .
+RUN pip install --no-cache-dir --no-compile -r requirements.txt
 
-# Install avec options d'optimisation :
-# --no-cache-dir   → pas de cache pip (réduit la taille du layer)
-# Torch/HF sont installés sans les extras CUDA inutiles
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Supprimer les fichiers inutiles du venv post-install pour réduire encore la taille :
-# - tests des librairies
-# - fichiers __pycache__
-# - données de test de torch
+# Nettoyage post-install agressif
 RUN find /opt/venv -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
 RUN find /opt/venv -type d -name "tests" -path "*/site-packages/*" -exec rm -rf {} + 2>/dev/null || true
-RUN find /opt/venv -name "*.dist-info" -type d | xargs -I{} find {} -name "RECORD" -delete 2>/dev/null || true
+RUN find /opt/venv -name "*.pyc" -delete 2>/dev/null || true
+RUN find /opt/venv -name "*.pyo" -delete 2>/dev/null || true
+# Supprimer docs embarquées dans les packages
+RUN find /opt/venv -type d -name "docs" -path "*/site-packages/*" -exec rm -rf {} + 2>/dev/null || true
+RUN find /opt/venv -type d -name "examples" -path "*/site-packages/*" -exec rm -rf {} + 2>/dev/null || true
 
 # ── Stage 2 : Runtime ──────────────────────────────────────────────────────
-FROM python:3.11-slim
+FROM python:3.11-alpine
 
 WORKDIR /app
 
-# Uniquement les libs runtime (pas build-essential)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpq5 \
+# Uniquement les libs runtime (pas build-base)
+RUN apk add --no-cache \
+    libpq \
     curl \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/cache/apk/*
 
-# Copier le venv compilé depuis le builder
+# Copier le venv compilé
 COPY --from=builder /opt/venv /opt/venv
-
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Désactiver les téléchargements automatiques HuggingFace/sentence-transformers
-# (les embeddings sont gérés par Ollama en production)
-ENV TRANSFORMERS_OFFLINE=1
-ENV HF_DATASETS_OFFLINE=1
-ENV TOKENIZERS_PARALLELISM=false
-# Désactiver la télémétrie Chromadb
-ENV ANONYMIZED_TELEMETRY=false
-# Désactiver la télémétrie LangChain
-ENV LANGCHAIN_TRACING_V2=false
+# Variables d'env pour désactiver les téléchargements lourds
+ENV TRANSFORMERS_OFFLINE=1 \
+    HF_DATASETS_OFFLINE=1 \
+    TOKENIZERS_PARALLELISM=false \
+    ANONYMIZED_TELEMETRY=false \
+    LANGCHAIN_TRACING_V2=false \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
 
-# Non-root user pour la sécurité
-RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
+# Non-root user
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser
 
-# Copier uniquement le code applicatif (pas venv, pas tests, pas data)
-COPY --chown=appuser:appuser backend/ /app/backend/
-COPY --chown=appuser:appuser alembic/ /app/alembic/
-COPY --chown=appuser:appuser alembic.ini /app/alembic.ini
+# Copier uniquement le code applicatif
+COPY --chown=appuser:appgroup backend/ /app/backend/
+COPY --chown=appuser:appgroup alembic/ /app/alembic/
+COPY --chown=appuser:appgroup alembic.ini /app/alembic.ini
 
-# Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:8000/api/v1/health || exit 1
 

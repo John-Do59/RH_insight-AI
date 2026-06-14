@@ -13,7 +13,7 @@ from backend.app.models.skill import Skill, JobSkill
 from backend.app.schemas.job_schema import JobParsedData
 from backend.app.rag.vector_store import get_vector_store
 from backend.app.utils.logger import logger
-from langfuse.decorators import observe
+from langfuse import observe
 
 
 @observe()

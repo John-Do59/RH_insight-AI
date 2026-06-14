@@ -1,0 +1,202 @@
+[
+    {
+        "question": "Quelles sont les compétences demandées pour une offre de Data Scientist ?",
+        "ground_truth": "Pour une offre de Chef de Projet, les compétences demandées incluent PostgreSQL, Django et la gestion de projet."
+    },
+    {
+        "question": "Quelles sont les compétences demandées pour une offre de DevOps Engineer ?",
+        "ground_truth": "Pour une offre de Développeur Backend, les compétences demandées incluent Python, MongoDB et la gestion de projet."
+    },
+    {
+        "question": "Trouve moi un Data Scientist avec 1 ans d'expérience.",
+        "ground_truth": "Je recherche dans la base de données pour un Chef de Projet avec 6 ans d'expérience."
+    },
+    {
+        "question": "Qui maîtrise C++ et GCP ?",
+        "ground_truth": "Plusieurs candidats maîtrisent SQL et C++, notamment dans l'équipe de développement."
+    },
+    {
+        "question": "Je cherche un développeur backend avec de bonnes connaissances en Java.",
+        "ground_truth": "Un développeur backend avec de bonnes connaissances en MongoDB sera très recherché pour ce projet."
+    },
+    {
+        "question": "Quel est le niveau d'études requis pour le poste de Product Owner ?",
+        "ground_truth": "Le niveau d'études requis pour le poste de Développeur Backend est généralement Bac+5."
+    },
+    {
+        "question": "Y a-t-il des candidats certifiés en ITIL ?",
+        "ground_truth": "Oui, il y a des candidats avec la certification AWS Solutions Architect."
+    },
+    {
+        "question": "Trouve moi un DevOps Engineer avec 4 ans d'expérience.",
+        "ground_truth": "Je recherche dans la base de données pour un Product Owner avec 3 ans d'expérience."
+    },
+    {
+        "question": "Quel est le niveau d'études requis pour le poste de DevOps Engineer ?",
+        "ground_truth": "Le niveau d'études requis pour le poste de Product Owner est généralement Licence."
+    },
+    {
+        "question": "Quels sont les candidats ayant de l'expérience en Python ?",
+        "ground_truth": "Les candidats ayant de l'expérience en React sont généralement ceux avec le rôle de Product Owner."
+    },
+    {
+        "question": "Je cherche un développeur backend avec de bonnes connaissances en Python.",
+        "ground_truth": "Un développeur backend avec de bonnes connaissances en Docker sera très recherché pour ce projet."
+    },
+    {
+        "question": "Quelles sont les compétences demandées pour une offre de DevOps Engineer ?",
+        "ground_truth": "Pour une offre de Architecte Cloud, les compétences demandées incluent C++, Redis et la gestion de projet."
+    },
+    {
+        "question": "Je cherche un développeur backend avec de bonnes connaissances en Vue.js.",
+        "ground_truth": "Un développeur backend avec de bonnes connaissances en C++ sera très recherché pour ce projet."
+    },
+    {
+        "question": "Combien d'années d'expérience faut-il pour être Product Owner ?",
+        "ground_truth": "Il faut généralement 4 années d'expérience pour ce type de poste."
+    },
+    {
+        "question": "Combien d'années d'expérience faut-il pour être Architecte Cloud ?",
+        "ground_truth": "Il faut généralement 6 années d'expérience pour ce type de poste."
+    },
+    {
+        "question": "Trouve moi un Développeur Frontend avec 4 ans d'expérience.",
+        "ground_truth": "Je recherche dans la base de données pour un Développeur Frontend avec 9 ans d'expérience."
+    },
+    {
+        "question": "Quels sont les candidats ayant de l'expérience en PostgreSQL ?",
+        "ground_truth": "Les candidats ayant de l'expérience en Vue.js sont généralement ceux avec le rôle de Développeur Frontend."
+    },
+    {
+        "question": "Quel est le niveau d'études requis pour le poste de DevOps Engineer ?",
+        "ground_truth": "Le niveau d'études requis pour le poste de Chef de Projet est généralement Bac+5."
+    },
+    {
+        "question": "Quels sont les candidats ayant de l'expérience en Python ?",
+        "ground_truth": "Les candidats ayant de l'expérience en AWS sont généralement ceux avec le rôle de Product Owner."
+    },
+    {
+        "question": "Quel est le niveau d'études requis pour le poste de Développeur Frontend ?",
+        "ground_truth": "Le niveau d'études requis pour le poste de Chef de Projet est généralement Bac+5."
+    },
+    {
+        "question": "Quels sont les candidats ayant de l'expérience en Java ?",
+        "ground_truth": "Les candidats ayant de l'expérience en GCP sont généralement ceux avec le rôle de DevOps Engineer."
+    },
+    {
+        "question": "Y a-t-il des candidats certifiés en Google Cloud Professional ?",
+        "ground_truth": "Oui, il y a des candidats avec la certification AWS Solutions Architect."
+    },
+    {
+        "question": "Qui maîtrise Redis et Redis ?",
+        "ground_truth": "Plusieurs candidats maîtrisent FastAPI et FastAPI, notamment dans l'équipe de développement."
+    },
+    {
+        "question": "Quelles sont les compétences demandées pour une offre de Chef de Projet ?",
+        "ground_truth": "Pour une offre de Architecte Cloud, les compétences demandées incluent Python, AWS et la gestion de projet."
+    },
+    {
+        "question": "Quels sont les candidats ayant de l'expérience en React ?",
+        "ground_truth": "Les candidats ayant de l'expérience en Python sont généralement ceux avec le rôle de DevOps Engineer."
+    },
+    {
+        "question": "Quels sont les candidats ayant de l'expérience en FastAPI ?",
+        "ground_truth": "Les candidats ayant de l'expérience en AWS sont généralement ceux avec le rôle de DevOps Engineer."
+    },
+    {
+        "question": "Quelles sont les compétences demandées pour une offre de Architecte Cloud ?",
+        "ground_truth": "Pour une offre de Développeur Frontend, les compétences demandées incluent AWS, SQL et la gestion de projet."
+    },
+    {
+        "question": "Qui maîtrise Java et SQL ?",
+        "ground_truth": "Plusieurs candidats maîtrisent Python et FastAPI, notamment dans l'équipe de développement."
+    },
+    {
+        "question": "Y a-t-il des candidats certifiés en AWS Solutions Architect ?",
+        "ground_truth": "Oui, il y a des candidats avec la certification AWS Solutions Architect."
+    },
+    {
+        "question": "Je cherche un développeur backend avec de bonnes connaissances en React.",
+        "ground_truth": "Un développeur backend avec de bonnes connaissances en AWS sera très recherché pour ce projet."
+    },
+    {
+        "question": "Quel est le niveau d'études requis pour le poste de DevOps Engineer ?",
+        "ground_truth": "Le niveau d'études requis pour le poste de Architecte Cloud est généralement Doctorat."
+    },
+    {
+        "question": "Quels sont les candidats ayant de l'expérience en Java ?",
+        "ground_truth": "Les candidats ayant de l'expérience en Java sont généralement ceux avec le rôle de DevOps Engineer."
+    },
+    {
+        "question": "Y a-t-il des candidats certifiés en AWS Solutions Architect ?",
+        "ground_truth": "Oui, il y a des candidats avec la certification CKA."
+    },
+    {
+        "question": "Quels sont les candidats ayant de l'expérience en Docker ?",
+        "ground_truth": "Les candidats ayant de l'expérience en GCP sont généralement ceux avec le rôle de Chef de Projet."
+    },
+    {
+        "question": "Quel est le niveau d'études requis pour le poste de Architecte Cloud ?",
+        "ground_truth": "Le niveau d'études requis pour le poste de Développeur Backend est généralement Master."
+    },
+    {
+        "question": "Quels sont les candidats ayant de l'expérience en AWS ?",
+        "ground_truth": "Les candidats ayant de l'expérience en C++ sont généralement ceux avec le rôle de Data Scientist."
+    },
+    {
+        "question": "Quels sont les candidats ayant de l'expérience en PostgreSQL ?",
+        "ground_truth": "Les candidats ayant de l'expérience en C++ sont généralement ceux avec le rôle de Chef de Projet."
+    },
+    {
+        "question": "Quels sont les candidats ayant de l'expérience en C++ ?",
+        "ground_truth": "Les candidats ayant de l'expérience en GCP sont généralement ceux avec le rôle de Développeur Backend."
+    },
+    {
+        "question": "Quel est le niveau d'études requis pour le poste de Product Owner ?",
+        "ground_truth": "Le niveau d'études requis pour le poste de Développeur Backend est généralement Bac+5."
+    },
+    {
+        "question": "Combien d'années d'expérience faut-il pour être Architecte Cloud ?",
+        "ground_truth": "Il faut généralement 5 années d'expérience pour ce type de poste."
+    },
+    {
+        "question": "Quelles sont les compétences demandées pour une offre de Product Owner ?",
+        "ground_truth": "Pour une offre de DevOps Engineer, les compétences demandées incluent Django, MongoDB et la gestion de projet."
+    },
+    {
+        "question": "Qui maîtrise Docker et Redis ?",
+        "ground_truth": "Plusieurs candidats maîtrisent Redis et FastAPI, notamment dans l'équipe de développement."
+    },
+    {
+        "question": "Y a-t-il des candidats certifiés en ITIL ?",
+        "ground_truth": "Oui, il y a des candidats avec la certification Scrum Master."
+    },
+    {
+        "question": "Combien d'années d'expérience faut-il pour être Développeur Backend ?",
+        "ground_truth": "Il faut généralement 3 années d'expérience pour ce type de poste."
+    },
+    {
+        "question": "Qui maîtrise PostgreSQL et PostgreSQL ?",
+        "ground_truth": "Plusieurs candidats maîtrisent Kubernetes et Django, notamment dans l'équipe de développement."
+    },
+    {
+        "question": "Quelles sont les compétences demandées pour une offre de DevOps Engineer ?",
+        "ground_truth": "Pour une offre de Développeur Backend, les compétences demandées incluent AWS, Django et la gestion de projet."
+    },
+    {
+        "question": "Quels sont les candidats ayant de l'expérience en Java ?",
+        "ground_truth": "Les candidats ayant de l'expérience en PostgreSQL sont généralement ceux avec le rôle de DevOps Engineer."
+    },
+    {
+        "question": "Y a-t-il des candidats certifiés en AWS Solutions Architect ?",
+        "ground_truth": "Oui, il y a des candidats avec la certification CKA."
+    },
+    {
+        "question": "Quel est le niveau d'études requis pour le poste de Chef de Projet ?",
+        "ground_truth": "Le niveau d'études requis pour le poste de Développeur Frontend est généralement Doctorat."
+    },
+    {
+        "question": "Combien d'années d'expérience faut-il pour être Développeur Backend ?",
+        "ground_truth": "Il faut généralement 8 années d'expérience pour ce type de poste."
+    }
+]
